@@ -37,7 +37,7 @@ if [[ "$distro" =~ "ID_LIKE="debian"" ]]; then
 
 
 elif [[ "$distro" =~ 'ID_LIKE="rhel fedora"' ]]; then
-    
+    #dffgdgdg
     echo -e  "\033[1;32mDownloading Golang please wait .....\033[0m"
     sudo sudo dnf update && sudo dnf install wget tar -y > /dev/null 2>&1
     sudo wget https://go.dev/dl/go1.22.2.linux-amd64.tar.gz > /dev/null 2>&1 &
