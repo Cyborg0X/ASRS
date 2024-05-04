@@ -1,35 +1,65 @@
 package main
 
-/*
+import (
+	"fmt"
+	"os/exec"
+	"strings"
+)
 
-echo "Checking packages installed....."
-packages=("rsync" "snapper" "ssh" "snort" "openssh-server" "openssh-client")
+func main() {
 
+	depcheck()
+}
 
+func depcheck() {
+	// return ack of
+	packages := make([]string, 6)
+	packages[0] = "rsync"
+	packages[1] = "snapper"
+	packages[2] = "ssh"
+	packages[3] = "snort"
+	packages[4] = "openssh-server"
+	packages[5] = "openssh-client"
+	checklist := make(map[string]string)
+	update := exec.Command("sudo", "apt", "update")
+	update.Run()
+	for i := range packages {
+		checkpkg := exec.Command("sudo", "dpkg", "-s", packages[i])
+		install := exec.Command("sudo", "apt", "install", packages[i], "-y")
+		output, err := checkpkg.CombinedOutput()
+		outputstr := string(output)
+		if err != nil {
+			checklist[packages[i]] = "NOT installed"
+			//fmt.Printf("installing %v..... please wait\n", packages[i])
+			install.Run()
 
+		} else if strings.Contains(outputstr, "Status: install ok installed") {
 
+			checklist[packages[i]] = "installed"
 
+		}
+		// don't forget to add some lines to interact with a text-based user interface (TUI)
+	}
+	var feelsgood int
+	for key, value := range checklist {
+		//fmt.Printf("%v %v\n", key, value)
+		if value == "installed" {
+			feelsgood++
+		} else {
+			fmt.Println("Some packages not intalled!!!!")
+			fmt.Println(key, value)
+		}
+	}
 
-Echo "Installing packages and dependecies started......."
-if [[ "$linuxdistro" =~ "ID_LIKE=debian" ]]; then
-    install="sudo apt install"
-    checkpkg="dpkg -s"
+	if feelsgood != 6 {
+		panic("Please try to install the package manually")
+	} else {
+		fmt.Println("ALL PACKAGES HAS BEEN INSTALLED SECCUSSFULLY")
+	}
+	return
+}
 
-elif [[ "$linuxdistro" =~ "ID_LIKE=rhel fedora" ]]; then
-    install="sudo yum install"
-    checkpkg="yum list installed"
-fi
-
-
-
-echo "Installing ASRS agent packages and dependencies.........."
-
-linuxdistro=$(cat /etc/*-release)
-
-
-echo "installing Rsync for syncing files......."
-sleep 3s
-dpkg -s rsync
-eval "$install rsync"
-
-*/
+// ssh connection and workstation
+func configSSH()  {
+	
+}
