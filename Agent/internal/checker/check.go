@@ -1,4 +1,4 @@
-package main
+package check
 
 import (
 	"fmt"
@@ -6,12 +6,7 @@ import (
 	"strings"
 )
 
-func main() {
-
-	depcheck()
-}
-
-func depcheck() {
+func depcheck() (ack bool) {
 	// return ack of
 	packages := make([]string, 6)
 	packages[0] = "rsync"
@@ -44,6 +39,7 @@ func depcheck() {
 	for key, value := range checklist {
 		//fmt.Printf("%v %v\n", key, value)
 		if value == "installed" {
+			fmt.Printf("%v is installed\n", key)
 			feelsgood++
 		} else {
 			fmt.Println("Some packages not intalled!!!!")
@@ -55,11 +51,14 @@ func depcheck() {
 		panic("Please try to install the package manually")
 	} else {
 		fmt.Println("ALL PACKAGES HAS BEEN INSTALLED SECCUSSFULLY")
+		ack := true
+		return ack
+
 	}
-	return
+
 }
 
 // ssh connection and workstation
-func configSSH()  {
-	
+func configSSH() {
+
 }
