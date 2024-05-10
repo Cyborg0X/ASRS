@@ -1,8 +1,8 @@
-package check
+package checker
 
 import (
 	"fmt"
-	"os/exec"
+	"os/exec"	
 	"strings"
 )
 

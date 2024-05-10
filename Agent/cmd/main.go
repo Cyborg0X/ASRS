@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"ASRS/Agent/internal/checker"
 )
 
 func main() {
