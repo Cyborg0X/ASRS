@@ -1,15 +1,14 @@
 package main
+
 import (
 	"bufio"
 	"fmt"
 	"os"
-	_"github.com/Cyborg0X/ASRS/Agent/internal/pkg/checker"
-
-	
+	"github.com/Cyborg0X/ASRS/Agent/internal/pkg/checker"
 )
 
 func main() {
-	checkdone := depcheck()
+	checkdone := checker.Depcheck()
 	if checkdone == true {
 		buffer := bufio.NewReader(os.Stdin)
 		fmt.Printf("Please Enter the IP address of the workstation: ")
