@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func depcheck() (ack bool) {
+func Depcheck() (ack bool) {
 	// return ack of
 	packages := make([]string, 6)
 	packages[0] = "rsync"

@@ -1,10 +1,10 @@
 package main
-
 import (
 	"bufio"
 	"fmt"
 	"os"
-	"./ASRS/Agent/internal/pkg/checker"
+	_"github.com/Cyborg0X/ASRS/Agent/internal/pkg/checker"
+
 	
 )
 
