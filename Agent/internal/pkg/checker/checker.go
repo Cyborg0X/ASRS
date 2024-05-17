@@ -1,9 +1,14 @@
 package checker
 
 import (
+	//"encoding/json"
 	"fmt"
-	"os/exec"	
+	//"io/ioutil"
+	"os/exec"
 	"strings"
+
+	"github.com/Cyborg0X/ASRS/Agent/internal/pkg/communication"
+	"github.com/Cyborg0X/ASRS/Agent/internal/pkg/handler"
 )
 
 func Depcheck() (ack bool) {
@@ -47,16 +52,24 @@ func Depcheck() (ack bool) {
 		}
 	}
 
-	if feelsgood != 6 {
-		panic("Please try to install the package manually")
-	} else {
+	if feelsgood == 6 {
 		fmt.Println("ALL PACKAGES HAS BEEN INSTALLED SECCUSSFULLY")
-		ack := true
-		return ack
-
+		fmt.Println("Initilizing config file,,,,,,")
+		err := handler.InitializeJSON()
+		if err != nil {
+			fmt.Println("Error initilizing config file", err)
+		}
+		communication.Checkandassign_wsip()
+		
+	} else {
+		panic("Please try to install the package manually")
 	}
+	
+	ack = true
+	return ack
 
 }
+
 
 // ssh connection and workstation
 func configSSH() {

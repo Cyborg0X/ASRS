@@ -10,17 +10,9 @@ if [[ $1 == "-debian" || $1 == "-ubuntu" ]]; then
     # INSTALL FOR DEBIAN
     echo -e  "\033[1;32mInstalling ASRS Agent dependencies......"
     sudo mkdir -p /etc/ASRS_agent/.config  2>/dev/null
-    cd /etc/ASRS_agent/.config && sudo mkdir SSH_config rsync_config snapshot_config connection_config env_var 2>/dev/null
-    mkdir /etc/ASRS_agent/.database 2>/dev/null
-    cd /etc/ASRS_agent/.database && sudo mkdir status_logs snapshot_logs detection_marker rsync_logs 2>/dev/null
-    logs=("status_logs" "snapshot_logs" "detection_marker" "rsync_logs")
-    confingu=("SSH_config" "rsync_config" "snapshot_config" "connection_config" "env_var")
-    for log in "${logs[@]}"; do
-        cd /etc/ASRS_agent/.database/"$log" && touch "$log".json
-    done
-    for confe in "${confingu[@]}"; do
-        cd /etc/ASRS_agent/.config/"$confe" && touch "$confe".json
-    done
+    cd /etc/ASRS_agent/.config && sudo touch config.json 2>/dev/null
+    sudo mkdir /etc/ASRS_agent/.database 2>/dev/null
+    cd /etc/ASRS_agent/.database && sudo touch data.json logs.json 2>/dev/null
 
     echo -e "\033[1;33mThe system is debian-based [OK]\033[0m"
     
@@ -73,17 +65,9 @@ elif [[ $1 == "-fedora" ]]; then
     sleep 1s
     echo -e  "\033[1;32mInstalling ASRS Agent dependencies......"
     sudo mkdir -p /etc/ASRS_agent/.config  2>/dev/null
-    cd /etc/ASRS_agent/.config && sudo mkdir SSH_config rsync_config snapshot_config connection_config env_var 2>/dev/null
+    cd /etc/ASRS_agent/.config && sudo touch config.json 2>/dev/null
     mkdir /etc/ASRS_agent/.database 2>/dev/null
-    cd /etc/ASRS_agent/.database && sudo mkdir status_logs snapshot_logs detection_marker rsync_logs 2>/dev/null
-    logs=("status_logs" "snapshot_logs" "detection_marker" "rsync_logs")
-    confingu=("SSH_config" "rsync_config" "snapshot_config" "connection_config" "env_var")
-    for log in "${logs[@]}"; do
-        cd /etc/ASRS_agent/.database/"$log" && touch "$log".json
-    done
-    for confe in "${confingu[@]}"; do
-        cd /etc/ASRS_agent/.config/"$confe" && touch "$confe".json
-    done
+    cd /etc/ASRS_agent/.database && sudo touch data.json logs.json 2>/dev/null
 
 cd ~/golang || exit
     echo -e  "\033[1;32mDownloading Golang please wait .....\033[0m"
