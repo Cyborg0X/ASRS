@@ -63,7 +63,7 @@ if [[ $1 == "-debian" || $1 == "-ubuntu" ]]; then
 elif [[ $1 == "-fedora" ]]; then
     sleep 1s
     echo -e  "\033[1;32mInstalling ASRS Workstation dependencies......"
-    sudo mkdir -p /etc/ASRS_WS/.config  2>/dev/null
+    sudo mkdir -p /etc/ASRS_WS/.config.json  2>/dev/null
     cd /etc/ASRS_WS/.config && sudo touch config.json 2>/dev/null
     sudo mkdir /etc/ASRS_WS/.database 2>/dev/null
     cd /etc/ASRS_WS/.database && sudo touch logs.json 2>/dev/null
@@ -91,7 +91,32 @@ elif [[ $1 == "-fedora" ]]; then
         wait $inst_pid
         echo -e  "\033[1;32m$pkg installed [OK]\033[0m"
     done
+    # Update package lists
+    apt-get update
 
+# Install required dependencies
+    apt-get install -y build-essential libpcap-dev libdumbnet-dev bison flex zlib1g-dev wget
+
+# Download and extract Snort source code
+    
+    wget https://www.snort.org/downloads/snort/snort-2.9.17.tar.gz
+    tar -xzf snort-2.9.17.tar.gz
+    cd snort-2.9.17 || exit
+
+# Configure, compile, and install Snort
+    ./configure
+    make
+    make install
+
+# Create Snort directories and configure Snort environment
+    mkdir -p /etc/snort/rules
+    mkdir -p /var/log/snort
+    touch /etc/snort/rules/snort.rules
+    echo "include \$RULE_PATH/snort.rules" >> /etc/snort/snort.conf
+
+# Start Snort
+    /usr/local/bin/snort -c /etc/snort/snort.conf -i eth0 -A console
+   #..........
     echo -e  "\033[1;32mAll Dependencies installed [OK]\033[0m"
     go1version=$(go version)
     printf "\033[1;32m%s installed\033[0m\n" "$go1version"
