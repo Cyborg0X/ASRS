@@ -39,11 +39,13 @@ func TaskHandler(wg *sync.WaitGroup, chanconn chan net.Conn, B3 bool) {
 		backchan := make(chan bool)
 		go Restore_Backup(backchan)
 		<-backchan
-
 		return
 	}
+
 	wg.Add(1)
-	go Local_actions()
+	if !B3 {
+		go Local_actions()
+	}
 	go ProcedureHandler(wg, chanconn)
 	wg.Wait()
 
@@ -148,14 +150,14 @@ func CreateSnapshot() {
 			date := time.Now()
 			fmt.Printf("Failed to write detection marker to `true`\n detection marker is false in the snapshot the has been taken in this time %v\n", date)
 		}
-		ioutil.WriteFile(filepath, Updated_Marker, 0766)
+		err = ioutil.WriteFile(filepath, Updated_Marker, 0766)
 		counter++
 		create := exec.Command("sudo", "snapper", "-c", asrs_conf, "create", "-d", discription, "--output", "json")
 		output, err := create.CombinedOutput()
 		if err != nil {
 			fmt.Printf("Error creating snapshot number: %v\n ERROR: %v \n output: %v\n", counter, err, string(output))
 		}
-		//sudo rsync -aAXv --delete /var/lib/snapper/configs/root /var/lib/snapper/snapshots/root/ username@192.168.1.100:/path/to/remote/snapper/
+
 		checker.Backup.SnapshotNum = checker.Backup.SnapshotNum + 1
 		checker.Detectionmarker.Markerisdetected = false
 		done, err := json.MarshalIndent(checker, "", "  ")
@@ -165,6 +167,9 @@ func CreateSnapshot() {
 		ioutil.WriteFile(filepath, done, 0766)
 
 		fmt.Println(string(output)) // log it later ALSO set JSON OUTPUT FORMAT IN SNAPPER
+		rsynco := exec.Command("sudo", "rsync", "-aAXv", "--delete", "/var/lib/snapper/configs/root", "/var/lib/snapper/snapshots/root/", "username@192.168.1.100:/path/to/remote/snapper/")
+		routput, err := rsynco.Output()
+		fmt.Println(string(routput))
 		time.Sleep(time.Hour)
 
 	}
@@ -191,6 +196,16 @@ func ProcedureReceiver() {
 
 func Local_actions() {
 	// receive channel from B2 to terminate
+	go func() {
+		for {
+			CreateSnapshot()
+			time.Sleep(time.Hour)
+		}
+	}()
+	go func() {
+		Sync_web_files()
+		time.Sleep(time.Minute)
+	}()
 
 }
 

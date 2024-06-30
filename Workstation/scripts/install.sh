@@ -90,34 +90,32 @@ function main() {
 
       for pkg in "${packages[@]}"; do
           echo -e  "\033[1;32minstalling $pkg ......\033[0m"
-          sudo dnf install "$pkg" -y > /dev/null 2>&1
+          sudo yum install "$pkg" -y > /dev/null 2>&1
           inst_pid=$!
           wait $inst_pid
           echo -e  "\033[1;32m$pkg installed [OK]\033[0m"
       done
-      # Update package lists
-      sudo dnf update
+# Install dependencies
+      yum update -y
+      yum install -y epel-release
+      yum install -y snort
 
-  # Install required dependencies
-      sudo dnf install -y build-essential libpcap-dev libdumbnet-dev bison flex zlib1g-dev wget
+# Backup the Snort configuration file
+      cp /etc/snort/snort.conf /etc/snort/snort.conf.bak
 
-  # Download and extract Snort source code
+# Edit the Snort configuration file
+      sed -i "'/^include \$RULE_PATH/a \alert tcp \$EXTERNAL_NET any -> \$HOME_NET any (msg:"COMMAND INJECTION ATTEMPT"; content:"|2e 2f|"; depth:2; sid:1000001; rev:1;)' /etc/snort/snort.conf"
+      sed -i '/^#output alert_full/s/^#//' /etc/snort/snort.conf
+      sed -i 's|output alert_full: .*|output alert_full: /var/log/snort/command_injection_alerts.txt|' /etc/snort/snort.conf
 
-      wget https://www.snort.org/downloads/snort/snort-2.9.17.tar.gz
-      tar -xzf snort-2.9.17.tar.gz
-      cd snort-2.9.17 || exit
-
-  # Configure, compile, and install Snort
-      ./configure
-      make
-      make install
-
-  # Create Snort directories and configure Snort environment
-      mkdir -p /etc/snort/rules
+# Create the log directory
       mkdir -p /var/log/snort
-      touch /etc/snort/rules/snort.rules
-      echo "include \$RULE_PATH/snort.rules" >> /etc/snort/snort.conf
 
+# Start and enable Snort
+      systemctl start snort
+      systemctl enable snort
+
+      echo "Snort configuration updated. Command injection attack rule added and separate alerts file created."
   # Start Snort
       /usr/local/bin/snort -c /etc/snort/snort.conf -i eth0 -A console
      #..........install SSH server

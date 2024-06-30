@@ -43,6 +43,7 @@ func TaskHandler() {
 	defer close(get_done)
 	Sendssh()
 	go Get_Status(&wg, get_done)
+	go checkIDS()
 	wg.Wait()
 
 }

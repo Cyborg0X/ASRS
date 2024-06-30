@@ -4,6 +4,8 @@ import "fmt"
 
 func Heal_now() {
 	fmt.Println("Heal now done")
+	
+
 }
 
 func Get_Status() {
