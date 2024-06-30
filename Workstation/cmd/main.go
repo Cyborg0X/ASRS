@@ -2,20 +2,26 @@ package main
 
 import (
 	"fmt"
-	"bufio"
-	"os"
+	"time"
+
 	"github.com/Cyborg0X/ASRS/Workstation/internal/pkg/checker"
-
+	//"github.com/Cyborg0X/ASRS/Workstation/internal/pkg/communication"
+	//"github.com/Cyborg0X/ASRS/Workstation/internal/pkg/config"
+	"github.com/Cyborg0X/ASRS/Workstation/internal/pkg/handler"
 )
-
 
 func main() {
 	checkdone := checker.Depcheck()
 	if checkdone == true {
-		buffer := bufio.NewReader(os.Stdin)
-		fmt.Printf("Please Enter the IP address of the workstation: ")
-		IPaddr, _ := buffer.ReadString('\n')
-		fmt.Println(IPaddr)
+		fmt.Println("Welcome to the Workstation of ASRS")
 	}
-}
+	//ip, port := config.AgentInfoParser()
+	//connection, err := communication.WS_dailer(ip, port)
+	//if err != nil {
+	//	fmt.Println("connection lost...")
+///	}
+	handler.TaskHandler()
 
+	time.Sleep(time.Hour)
+
+}

@@ -1,14 +1,20 @@
 package checker
 
 import (
+	//"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+
+	//"io/ioutil"
 	"os/exec"
 	"strings"
-	
+
+	"github.com/Cyborg0X/ASRS/Workstation/internal/pkg/communication"
+	"github.com/Cyborg0X/ASRS/Workstation/internal/pkg/config"
 )
 
-
-func Depcheck() (ack bool) {
+func Depcheck() bool {
 	// return ack of
 	packages := make([]string, 6)
 	packages[0] = "rsync"
@@ -18,11 +24,11 @@ func Depcheck() (ack bool) {
 	packages[4] = "openssh-server"
 	packages[5] = "openssh-client"
 	checklist := make(map[string]string)
-	update := exec.Command("sudo", "dnf", "update")
+	update := exec.Command("sudo", "apt", "update")
 	update.Run()
 	for i := range packages {
-		checkpkg := exec.Command("sudo", "rpm", "-q", packages[i])
-		install := exec.Command("sudo", "dnf", "install", packages[i], "-y")
+		checkpkg := exec.Command("sudo", "dpkg", "-s", packages[i])
+		install := exec.Command("sudo", "apt", "install", packages[i], "-y")
 		output, err := checkpkg.CombinedOutput()
 		outputstr := string(output)
 		if err != nil {
@@ -41,6 +47,7 @@ func Depcheck() (ack bool) {
 	for key, value := range checklist {
 		//fmt.Printf("%v %v\n", key, value)
 		if value == "installed" {
+			fmt.Printf("%v is installed\n", key)
 			feelsgood++
 		} else {
 			fmt.Println("Some packages not intalled!!!!")
@@ -48,11 +55,40 @@ func Depcheck() (ack bool) {
 		}
 	}
 
-	if feelsgood != 6 {
-		panic("Please try to install the package manually")
-	} else {
+	if feelsgood == 6 {
 		fmt.Println("ALL PACKAGES HAS BEEN INSTALLED SECCUSSFULLY")
-		return ack == true
+		fmt.Println("Initilizing config file,,,,,,")
+		filepath := "/etc/ASRS_WS/.config/config.json"
+
+		_, err := ioutil.ReadFile(filepath)
+		file, _ := os.Stat(filepath)
+		// If file doesn't exist, assume it's the first run and create a new one with InitializeJSON
+		if os.IsNotExist(err) || file.Size() == 0 {
+			err := config.InitializeJSON()
+			if err != nil {
+				fmt.Println("Error initialize config file")
+			}
+
+		}
+
+		err = communication.AssignWorkstationIP()
+		if err != nil {
+			fmt.Println("Erroring assigning Workstation IP address", err)
+		}
+		err = communication.AssignAgentIP()
+		if err != nil {
+			fmt.Println("Erroring assigning Agent IP address", err)
+		}
+
+	} else {
+		panic("Error checking startup")
 	}
-	
+	fmt.Fprint(os.Stdout, "\x1b[H\x1b[2J")
+	ack := true
+	return ack
+}
+
+// ssh connection and workstation
+func configSSH() {
+
 }

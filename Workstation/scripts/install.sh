@@ -1,128 +1,201 @@
 #!/bin/bash
-sleep 1s
-if [ -z "$1" ];then
-    printf "\033[1;32mUsage: ./install.sh [options] command\nplease choose your OS:\n -debian\n -ubuntu\n -fedora\n\033[0m"
-    exit
-fi
 
-cd ~/golang || exit
-if [[ $1 == "-debian" || $1 == "-ubuntu" ]]; then
-    # INSTALL FOR DEBIAN
-    echo -e  "\033[1;32mInstalling ASRS Workstation dependencies......"
-    sudo mkdir -p /etc/ASRS_WS/.config  2>/dev/null
-    cd /etc/ASRS_WS/.config && sudo touch config.json 2>/dev/null
-    mkdir /etc/ASRS_WS/.database 2>/dev/null
-    cd /etc/ASRS_WS/.database && sudo touch logs.json 2>/dev/null
+   # Define some variables
+SSH_CONFIG_FILE="/etc/ssh/sshd_config"
+BACKUP_FILE="/etc/ssh/sshd_config.bak"
+function main() {
+    if [ -z "$1" ];then
+      printf "\033[1;32mUsage: ./install.sh [options] command\nplease choose your OS:\n -debian\n -ubuntu\n -fedora\n\033[0m"
+      exit
+  fi
 
-    echo -e "\033[1;33mThe system is debian-based [OK]\033[0m"
-    
-    if ping -c 4 google.com > /dev/null 2>&1 ; then 
-        echo -e  "\033[1;32mInternet connectivity [OK]\033[0m"
-    else
-     
-        echo -e  "\033[1;31mERROR: Please check the internet connectivity\033[0m"
-        exit
-    fi
-    echo -e  "\033[1;32mDownloading Golang please wait .....\033[0m"
-    sudo apt install wget -y > /dev/null 2>&1
-    #sudo wget https://go.dev/dl/go1.22.2.linux-amd64.tar.gz > /dev/null 2>&1 &
-    #wget_pid=$!
-    #wait $wget_pid
-    echo -e  "\033[1;32mGolang Downloaded [OK]"
-    sleep 1s
-    echo -e  "\033[1;32minstalling Golang V1.22.2 ......\033[0m"
-    #sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf ~/golang/go1.22.2.linux-amd64.tar.gz
-    export PATH=$PATH:/usr/local/go/bin
-    wait
-    echo -e  "\033[1;32mGolang installed [OK]\033[0m"
-    sleep 1s 
-    packages=("rsync" "snapper" "ssh" "openssh-server" "openssh-client")
-    
-    for pkg in "${packages[@]}"; do
-        echo -e  "\033[1;32minstalling $pkg ......\033[0m"
-        sudo apt install "$pkg" -y > /dev/null 2>&1
-        inst_pid=$!
-        wait $inst_pid
-        echo -e  "\033[1;32m$pkg installed [OK]\033[0m"
-    done
-    
-    echo -e  "\033[1;32minstalling snort ......\033[0m"
-    sudo apt install snort -y 
-    snort_pid=$!
-    wait $snort_pid
-    echo -e  "\033[1;32msnort installed [OK]\033[0m"
+  cd ~/golang || exit
+  if [[ $1 == "-debian" || $1 == "-ubuntu" ]]; then
+      # INSTALL FOR DEBIAN
+      echo -e  "\033[1;32mInstalling ASRS Workstation dependencies......"
+      sudo mkdir -p /etc/ASRS_WS/.config  2>/dev/null
+      cd /etc/ASRS_WS/.config && sudo touch config.json 2>/dev/null
+      mkdir /etc/ASRS_WS/.database 2>/dev/null
+      cd /etc/ASRS_WS/.database && sudo touch logs.json 2>/dev/null
+
+      echo -e "\033[1;33mThe system is debian-based [OK]\033[0m"
+
+      if ping -c 4 google.com > /dev/null 2>&1 ; then 
+          echo -e  "\033[1;32mInternet connectivity [OK]\033[0m"
+      else
+
+          echo -e  "\033[1;31mERROR: Please check the internet connectivity\033[0m"
+          exit
+      fi
+      echo -e  "\033[1;32mDownloading Golang please wait .....\033[0m"
+      sudo apt install wget -y > /dev/null 2>&1
+      #sudo wget https://go.dev/dl/go1.22.2.linux-amd64.tar.gz > /dev/null 2>&1 &
+      #wget_pid=$!
+      #wait $wget_pid
+      echo -e  "\033[1;32mGolang Downloaded [OK]"
+      sleep 1s
+      echo -e  "\033[1;32minstalling Golang V1.22.2 ......\033[0m"
+      #sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf ~/golang/go1.22.2.linux-amd64.tar.gz
+      export PATH=$PATH:/usr/local/go/bin
+      wait
+      echo -e  "\033[1;32mGolang installed [OK]\033[0m"
+      sleep 1s 
+      packages=("rsync" "snapper" "ssh" "openssh-server" "openssh-client")
+
+      for pkg in "${packages[@]}"; do
+          echo -e  "\033[1;32minstalling $pkg ......\033[0m"
+          sudo apt install "$pkg" -y > /dev/null 2>&1
+          inst_pid=$!
+          wait $inst_pid
+          echo -e  "\033[1;32m$pkg installed [OK]\033[0m"
+      done
+
+      echo -e  "\033[1;32minstalling snort ......\033[0m"
+      sudo apt install snort -y 
+      snort_pid=$!
+      wait $snort_pid
+      echo -e  "\033[1;32msnort installed [OK]\033[0m"
 
 
-    echo -e  "\033[1;32mAll Dependencies installed [OK]\033[0m"
-    go1version=$(go version)
-    printf "\033[1;32m%s installed\033[0m\n" "$go1version"
-    echo -e  "\033[1;32mFinshied...\033[0m"
-    exit
+      echo -e  "\033[1;32mAll Dependencies installed [OK]\033[0m"
+      go1version=$(go version)
+      printf "\033[1;32m%s installed\033[0m\n" "$go1version"
+      echo -e  "\033[1;32mFinshied...\033[0m"
+      exit
 
-    # the same installation but for RHEL FEDORA
-elif [[ $1 == "-fedora" ]]; then
-    sleep 1s
-    echo -e  "\033[1;32mInstalling ASRS Workstation dependencies......"
-    sudo mkdir -p /etc/ASRS_WS/.config.json  2>/dev/null
-    cd /etc/ASRS_WS/.config && sudo touch config.json 2>/dev/null
-    sudo mkdir /etc/ASRS_WS/.database 2>/dev/null
-    cd /etc/ASRS_WS/.database && sudo touch logs.json 2>/dev/null
+      # the same installation but for RHEL FEDORA
+  elif [[ $1 == "-fedora" ]]; then
+      sleep 1s
+      echo -e  "\033[1;32mInstalling ASRS Workstation dependencies......"
+      sudo mkdir -p /etc/ASRS_WS/.config.json  2>/dev/null
+      cd /etc/ASRS_WS/.config && sudo touch config.json 2>/dev/null
+      sudo mkdir /etc/ASRS_WS/.database 2>/dev/null
+      cd /etc/ASRS_WS/.database && sudo touch logs.json 2>/dev/null
 
-    cd ~/golang || exit
-    echo -e  "\033[1;32mDownloading Golang please wait .....\033[0m"
-    sudo sudo dnf update && sudo dnf install wget tar -y > /dev/null 2>&1
-    sudo wget https://go.dev/dl/go1.22.2.linux-amd64.tar.gz > /dev/null 2>&1 &
-    wget_pid=$!
-    wait $wget_pid
-    echo -e  "\033[1;32mGolang Downloaded [OK]"
-    sleep 1s
-    echo -e  "\033[1;32minstalling Golang V1.22.2 ......\033[0m"
-    sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf ~/golang/go1.22.2.linux-amd64.tar.gz
-    export PATH=$PATH:/usr/local/go/bin
-    wait
-    echo -e  "\033[1;32mGolang installed [OK]\033[0m"
-    sleep 1s 
-    packages=("rsync" "snapper" "ssh" "snort" "openssh-server" "openssh-client")
-    
-    for pkg in "${packages[@]}"; do
-        echo -e  "\033[1;32minstalling $pkg ......\033[0m"
-        sudo apt install "$pkg" -y > /dev/null 2>&1
-        inst_pid=$!
-        wait $inst_pid
-        echo -e  "\033[1;32m$pkg installed [OK]\033[0m"
-    done
-    # Update package lists
-    apt-get update
+      cd ~/golang || exit
+      echo -e  "\033[1;32mDownloading Golang please wait .....\033[0m"
+      sudo sudo dnf update && sudo dnf install wget tar -y > /dev/null 2>&1
+      sudo wget https://go.dev/dl/go1.22.2.linux-amd64.tar.gz > /dev/null 2>&1 &
+      wget_pid=$!
+      wait $wget_pid
+      echo -e  "\033[1;32mGolang Downloaded [OK]"
+      sleep 1s
+      echo -e  "\033[1;32minstalling Golang V1.22.2 ......\033[0m"
+      sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf ~/golang/go1.22.2.linux-amd64.tar.gz
+      export PATH=$PATH:/usr/local/go/bin
+      wait
+      echo -e  "\033[1;32mGolang installed [OK]\033[0m"
+      sleep 1s 
+      packages=("rsync" "snapper" "ssh" "snort" "openssh-server" "openssh-client")
 
-# Install required dependencies
-    apt-get install -y build-essential libpcap-dev libdumbnet-dev bison flex zlib1g-dev wget
+      for pkg in "${packages[@]}"; do
+          echo -e  "\033[1;32minstalling $pkg ......\033[0m"
+          sudo dnf install "$pkg" -y > /dev/null 2>&1
+          inst_pid=$!
+          wait $inst_pid
+          echo -e  "\033[1;32m$pkg installed [OK]\033[0m"
+      done
+      # Update package lists
+      sudo dnf update
 
-# Download and extract Snort source code
-    
-    wget https://www.snort.org/downloads/snort/snort-2.9.17.tar.gz
-    tar -xzf snort-2.9.17.tar.gz
-    cd snort-2.9.17 || exit
+  # Install required dependencies
+      sudo dnf install -y build-essential libpcap-dev libdumbnet-dev bison flex zlib1g-dev wget
 
-# Configure, compile, and install Snort
-    ./configure
-    make
-    make install
+  # Download and extract Snort source code
 
-# Create Snort directories and configure Snort environment
-    mkdir -p /etc/snort/rules
-    mkdir -p /var/log/snort
-    touch /etc/snort/rules/snort.rules
-    echo "include \$RULE_PATH/snort.rules" >> /etc/snort/snort.conf
+      wget https://www.snort.org/downloads/snort/snort-2.9.17.tar.gz
+      tar -xzf snort-2.9.17.tar.gz
+      cd snort-2.9.17 || exit
 
-# Start Snort
-    /usr/local/bin/snort -c /etc/snort/snort.conf -i eth0 -A console
-   #..........
-    echo -e  "\033[1;32mAll Dependencies installed [OK]\033[0m"
-    go1version=$(go version)
-    printf "\033[1;32m%s installed\033[0m\n" "$go1version"
-    echo -e  "\033[1;32mFinshied...\033[0m"
-    exit
+  # Configure, compile, and install Snort
+      ./configure
+      make
+      make install
 
-else
-    echo -e  "\033[1;31mERROR: Operating system is not supported\033[0m"
+  # Create Snort directories and configure Snort environment
+      mkdir -p /etc/snort/rules
+      mkdir -p /var/log/snort
+      touch /etc/snort/rules/snort.rules
+      echo "include \$RULE_PATH/snort.rules" >> /etc/snort/snort.conf
+
+  # Start Snort
+      /usr/local/bin/snort -c /etc/snort/snort.conf -i eth0 -A console
+     #..........install SSH server
+      install_ssh_server
+      backup_ssh_config
+      configure_ssh_server
+      restart_ssh_service
+      sudo ufw allow ssh
+      echo "SSH server installation and configuration complete."
+
+      sudo firewall-cmd --permanent --add-service=ssh
+      sudo firewall-cmd --reload
+
+
+
+      echo -e  "\033[1;32mAll Dependencies installed [OK]\033[0m"
+      go1version=$(go version)
+      printf "\033[1;32m%s installed\033[0m\n" "$go1version"
+      echo -e  "\033[1;32mFinshied...\033[0m"
+      exit
+
+  else
+      echo -e  "\033[1;31mERROR: Operating system is not supported\033[0m"
+  fi
+
+}
+
+
+# Function to install ssh server
+function install_ssh_server() {
+  if [ -x "$(command -v apt)" ]; then
+    sudo apt update
+    sudo apt install -y openssh-server
+  elif [ -x "$(command -v yum)" ]; then
+    sudo yum install -y openssh-server
+  elif [ -x "$(command -v dnf)" ]; then
+    sudo dnf install -y openssh-server
+  elif [ -x "$(command -v pacman)" ]; then
+    sudo pacman -Syu --noconfirm openssh
+  else
+    echo "Unsupported package manager. Please install OpenSSH Server manually."
+    exit 1
+  fi
+}
+
+# Function to backup the current SSH config
+function backup_ssh_config() {
+  if [ -f "${SSH_CONFIG_FILE}" ]; then
+    sudo cp "${SSH_CONFIG_FILE}" "${BACKUP_FILE}"
+    echo "Backup of SSH configuration saved to ${BACKUP_FILE}"
+  else
+    echo "SSH configuration file not found at ${SSH_CONFIG_FILE}. Exiting."
+    exit 1
+  fi
+}
+
+# Function to configure the SSH server for passwordless authentication
+function configure_ssh_server() {
+  sudo sed -i 's/^#Port 22/Port 22/' "${SSH_CONFIG_FILE}"
+  sudo sed -i 's/^#PermitRootLogin prohibit-password/PermitRootLogin no/' "${SSH_CONFIG_FILE}"
+  sudo sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' "${SSH_CONFIG_FILE}"
+  sudo sed -i 's/^#PubkeyAuthentication yes/PubkeyAuthentication yes/' "${SSH_CONFIG_FILE}"
+}
+
+
+# Function to restart the SSH service
+function restart_ssh_service() {
+  if [ -x "$(command -v systemctl)" ]; then
+    sudo systemctl restart sshd || sudo systemctl restart ssh
+  elif [ -x "$(command -v service)" ]; then
+    sudo service ssh restart
+  else
+    echo "Unsupported service manager. Please restart the SSH service manually."
+    exit 1
+  fi
+}
+
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$1"
 fi

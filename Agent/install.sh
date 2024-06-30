@@ -12,7 +12,7 @@ if [[ $1 == "-debian" || $1 == "-ubuntu" ]]; then
     sudo mkdir -p /etc/ASRS_agent/.config  2>/dev/null
     cd /etc/ASRS_agent/.config && sudo touch config.json 2>/dev/null
     sudo mkdir /etc/ASRS_agent/.database 2>/dev/null
-    cd /etc/ASRS_agent/.database && sudo touch data.json logs.json 2>/dev/null
+    cd /etc/ASRS_agent/.database && sudo touch id_rsa data.json logs.json 2>/dev/null
 
     echo -e "\033[1;33mThe system is debian-based [OK]\033[0m"
     
@@ -33,10 +33,11 @@ if [[ $1 == "-debian" || $1 == "-ubuntu" ]]; then
     echo -e  "\033[1;32minstalling Golang V1.22.2 ......\033[0m"
     #sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf ~/golang/go1.22.2.linux-amd64.tar.gz
     export PATH=$PATH:/usr/local/go/bin
+    sudo snapper -c root create-config /
     wait
     echo -e  "\033[1;32mGolang installed [OK]\033[0m"
     sleep 1s 
-  packages=("rsync" "snapper" "ssh" "openssh-server" "openssh-client")
+    packages=("rsync" "snapper" "ssh" "openssh-server" "openssh-client")
     
     for pkg in "${packages[@]}"; do
         echo -e  "\033[1;32minstalling $pkg ......\033[0m"
@@ -69,7 +70,7 @@ elif [[ $1 == "-fedora" ]]; then
     mkdir /etc/ASRS_agent/.database 2>/dev/null
     cd /etc/ASRS_agent/.database && sudo touch data.json logs.json 2>/dev/null
 
-cd ~/golang || exit
+    cd ~/golang || exit
     echo -e  "\033[1;32mDownloading Golang please wait .....\033[0m"
     sudo sudo dnf update && sudo dnf install wget tar -y > /dev/null 2>&1
     sudo wget https://go.dev/dl/go1.22.2.linux-amd64.tar.gz > /dev/null 2>&1 &
@@ -92,7 +93,6 @@ cd ~/golang || exit
         wait $inst_pid
         echo -e  "\033[1;32m$pkg installed [OK]\033[0m"
     done
-
     echo -e  "\033[1;32mAll Dependencies installed [OK]\033[0m"
     go1version=$(go version)
     printf "\033[1;32m%s installed\033[0m\n" "$go1version"
