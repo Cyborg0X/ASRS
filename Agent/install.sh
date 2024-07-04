@@ -12,7 +12,7 @@ if [[ $1 == "-debian" || $1 == "-ubuntu" ]]; then
     sudo mkdir -p /etc/ASRS_agent/.config  2>/dev/null
     cd /etc/ASRS_agent/.config && sudo touch config.json 2>/dev/null
     sudo mkdir /etc/ASRS_agent/.database 2>/dev/null
-    cd /etc/ASRS_agent/.database && sudo touch id_rsa data.json logs.json 2>/dev/null
+    cd /etc/ASRS_agent/.database && sudo touch data.json logs.json 2>/dev/null
 
     echo -e "\033[1;33mThe system is debian-based [OK]\033[0m"
     
@@ -33,7 +33,7 @@ if [[ $1 == "-debian" || $1 == "-ubuntu" ]]; then
     echo -e  "\033[1;32minstalling Golang V1.22.2 ......\033[0m"
     #sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf ~/golang/go1.22.2.linux-amd64.tar.gz
     export PATH=$PATH:/usr/local/go/bin
-    sudo snapper -c root create-config /
+    #sudo snapper -c root create-config /
     wait
     echo -e  "\033[1;32mGolang installed [OK]\033[0m"
     sleep 1s 

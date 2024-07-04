@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"time"
+	"sync"
 
 	"github.com/Cyborg0X/ASRS/Workstation/internal/pkg/checker"
 	//"github.com/Cyborg0X/ASRS/Workstation/internal/pkg/communication"
@@ -11,6 +11,8 @@ import (
 )
 
 func main() {
+	var wg sync.WaitGroup
+
 	checkdone := checker.Depcheck()
 	if checkdone == true {
 		fmt.Println("Welcome to the Workstation of ASRS")
@@ -19,9 +21,9 @@ func main() {
 	//connection, err := communication.WS_dailer(ip, port)
 	//if err != nil {
 	//	fmt.Println("connection lost...")
-///	}
-	handler.TaskHandler()
-
-	time.Sleep(time.Hour)
+	///	}
+	wg.Add(1)
+	handler.TaskHandler(&wg)
+	wg.Wait()
 
 }

@@ -22,7 +22,6 @@ func main() {
 	procedure_chan := make(chan net.Conn, 1)
 	go communication.AG_Listener(ip, port, procedure_chan)
 	B3 := logger.DetectionMarker()
-	handler.SSH_config()
 	go handler.TaskHandler(&wg, procedure_chan, B3)
 	wg.Wait()
 

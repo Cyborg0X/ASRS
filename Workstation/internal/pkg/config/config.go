@@ -26,9 +26,9 @@ type Config struct {
 		SSH_Agent_username string `json:"Agent SSH username"`
 	} `json:"Agentinfo"`
 	Workstationinfo struct {
-		IPaddr          string `json:"WSIP"`
-		Port            string `json:"WSport"`
-		SSH_WS_username string `json:"WS SSH username"`
+		IPaddr  string `json:"WSIP"`
+		Port    string `json:"WSport"`
+		SendSSH bool   `json:"WS SSH username sent"`
 	} `json:"Workstationinfo"`
 
 	Detectionmarker struct {
@@ -48,12 +48,12 @@ func InitializeJSON() error {
 			Ipaddr             string `json:"AGIP"`
 			Port               string `json:"AGport"`
 			SSH_Agent_username string `json:"Agent SSH username"`
-		}{Ipaddr: "", Port: "1969", SSH_Agent_username: ""},
+		}{Ipaddr: "", Port: "1969", SSH_Agent_username: "none"},
 		Workstationinfo: struct {
-			IPaddr          string `json:"WSIP"`
-			Port            string `json:"WSport"`
-			SSH_WS_username string `json:"WS SSH username"`
-		}{IPaddr: "", Port: "1969", SSH_WS_username: "none"},
+			IPaddr  string `json:"WSIP"`
+			Port    string `json:"WSport"`
+			SendSSH bool   `json:"WS SSH username sent"`
+		}{IPaddr: "", Port: "1969", SendSSH: false},
 		Detectionmarker: struct{ Markerisdetected bool }{Markerisdetected: false},
 		Filepath: struct {
 			Configfilepath   string `json:"config file path"`

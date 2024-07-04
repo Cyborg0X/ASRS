@@ -11,6 +11,8 @@ import (
 )
 
 var k int
+var filepath = "/etc/ASRS_agent/.config/config.json"
+var filedata, _ = ioutil.ReadFile(filepath)
 
 type DataType int
 
@@ -44,7 +46,7 @@ func TaskHandler(wg *sync.WaitGroup, chanconn chan net.Conn, B3 bool) {
 
 	wg.Add(1)
 	if !B3 {
-		go Local_actions()
+		go Local_actions(wg)
 	}
 	go ProcedureHandler(wg, chanconn)
 	wg.Wait()
@@ -88,9 +90,12 @@ func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn) {
 				case TypeSSH:
 					dataMap := wrapper.Data.(map[string]interface{})
 					userbame := dataMap["SSH username"].(string)
-
 					go get_username(userbame)
 					fmt.Println("SSH MESSAGE: SSH username RECEIVED")
+					// sending keys for SSH rsync
+					keys := SSH_config()
+					conneceted.Write([]byte(keys))
+					conneceted.Close()
 
 				}
 				break
@@ -106,14 +111,10 @@ func CreateSnapshot() {
 	asrs_conf := "ASRS_CONF"
 	discription := "Incremental Backup"
 	mountpoint := "/"
-	filepath := "/etc/ASRS_agent/.config/config.json"
-	snapshotlogs, err := ioutil.ReadFile(filepath)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
+	snapshotlogs := filedata
+
 	var checker Config
-	err = json.Unmarshal(snapshotlogs, &checker)
+	err := json.Unmarshal(snapshotlogs, &checker)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
@@ -179,10 +180,9 @@ func CreateSnapshot() {
 
 func get_username(username string) {
 
-	filepath := "/etc/ASRS_agent/.config/config.json"
 	var put Config
 	//
-	file, err := ioutil.ReadFile(filepath)
+	file := filedata
 	_ = json.Unmarshal(file, &put)
 	put.Workstationinfo.SSH_username = username
 	jsondata, err := json.MarshalIndent(put, "", "  ")
@@ -190,12 +190,17 @@ func get_username(username string) {
 	ioutil.WriteFile(filepath, jsondata, 0766)
 }
 
+func SSHkeys() {
+
+}
+
 func ProcedureReceiver() {
 
 }
 
-func Local_actions() {
+func Local_actions(wg *sync.WaitGroup) {
 	// receive channel from B2 to terminate
+	defer wg.Done()
 	go func() {
 		for {
 			CreateSnapshot()
@@ -203,12 +208,51 @@ func Local_actions() {
 		}
 	}()
 	go func() {
-		Sync_web_files()
 		time.Sleep(time.Minute)
+		Sync_web_files()
+
 	}()
 
 }
 
 func Sync_web_files() {
 	// for loop and wait for sync file and log it
+	var conf Config
+	data := filedata
+	err := json.Unmarshal(data, &conf)
+	errorhandler(err, "SYNC WEB FILES MESSAGE: Failed to unmarshal config")
+	var website = []string{
+		"/var/www/html/",
+		"/usr/share/nginx/html/",
+	}
+	var database = []string{
+		"/var/lib/mysql/",
+		"/var/lib/pgsql/",
+	}
+
+	var WSdir = []string{
+		"/etc/ASRS_WS/.database/database_backup",
+		"/etc/ASRS_WS/.database/website_backup",
+	}
+	go func() {
+		for i, dir := range WSdir {
+
+			dest := fmt.Sprintf("%v@%v:%v", conf.Workstationinfo.SSH_username, conf.Workstationinfo.IPaddr, dir)
+			if i == 0 {
+				for _, back := range website {
+
+					cmd := exec.Command("sudo", "rsync", "-avz", "--delete", back, dest)
+					cmd.Output()
+				}
+			} else if i == 1 {
+				for _, back := range database {
+
+					cmd := exec.Command("sudo", "rsync", "-avz", "--delete", back, dest)
+					cmd.Output()
+				}
+			}
+
+		}
+	}()
+
 }

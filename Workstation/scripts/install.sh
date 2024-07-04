@@ -17,6 +17,7 @@ function main() {
       cd /etc/ASRS_WS/.config && sudo touch config.json 2>/dev/null
       mkdir /etc/ASRS_WS/.database 2>/dev/null
       cd /etc/ASRS_WS/.database && sudo touch logs.json 2>/dev/null
+      cd /etc/ASRS_WS/.database && sudo mkdir website_backup database_backup 2>/dev/null
 
       echo -e "\033[1;33mThe system is debian-based [OK]\033[0m"
 
@@ -49,6 +50,13 @@ function main() {
           wait $inst_pid
           echo -e  "\033[1;32m$pkg installed [OK]\033[0m"
       done
+           #..........install SSH server
+      install_ssh_server
+      backup_ssh_config
+      configure_ssh_server
+      restart_ssh_service
+      sudo ufw allow ssh
+      echo "SSH server installation and configuration complete."
 
       echo -e  "\033[1;32minstalling snort ......\033[0m"
       sudo apt install snort -y 
@@ -140,6 +148,7 @@ function main() {
   else
       echo -e  "\033[1;31mERROR: Operating system is not supported\033[0m"
   fi
+   
 
 }
 
@@ -172,12 +181,12 @@ function backup_ssh_config() {
   fi
 }
 
-# Function to configure the SSH server for passwordless authentication
+# Function to configure the SSH server for passwordless authentication 
 function configure_ssh_server() {
-  sudo sed -i 's/^#Port 22/Port 22/' "${SSH_CONFIG_FILE}"
-  sudo sed -i 's/^#PermitRootLogin prohibit-password/PermitRootLogin no/' "${SSH_CONFIG_FILE}"
-  sudo sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' "${SSH_CONFIG_FILE}"
-  sudo sed -i 's/^#PubkeyAuthentication yes/PubkeyAuthentication yes/' "${SSH_CONFIG_FILE}"
+  sudo sed -i 's/^#Port 22/#Port 22/' "${SSH_CONFIG_FILE}"
+  sudo sed -i 's/^#PermitRootLogin prohibit-password/#PermitRootLogin no/' "${SSH_CONFIG_FILE}"
+  sudo sed -i 's/^#PasswordAuthentication yes/#PasswordAuthentication no/' "${SSH_CONFIG_FILE}"
+  sudo sed -i 's/^#PubkeyAuthentication yes/#PubkeyAuthentication yes/' "${SSH_CONFIG_FILE}"
 }
 
 

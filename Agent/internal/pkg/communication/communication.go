@@ -99,7 +99,7 @@ func AssignWorkstationIP() error {
 		buffer := bufio.NewReader(os.Stdin)
 		lookforip.Workstationinfo.IPaddr, _ = buffer.ReadString('\n')
 		lookforip.Workstationinfo.IPaddr = strings.TrimSpace(lookforip.Workstationinfo.IPaddr) // Remove trailing newline
-		modifiedData, err := json.Marshal(lookforip)
+		modifiedData, err := json.MarshalIndent(lookforip, "", "  ")
 		errorhandler(err, "Error marshaling JSON: ")
 		err = ioutil.WriteFile(filepath, modifiedData, 0766)
 		errorhandler(err, "Error writing JSON file:")
@@ -139,7 +139,7 @@ func AssignAgentIP() error {
 		buffer := bufio.NewReader(os.Stdin)
 		lookforip.Agentinfo.Ipaddr, _ = buffer.ReadString('\n')
 		lookforip.Agentinfo.Ipaddr = strings.TrimSpace(lookforip.Agentinfo.Ipaddr) // Remove trailing newline
-		modifiedData, err := json.Marshal(lookforip)
+		modifiedData, err := json.MarshalIndent(lookforip, "", "  ")
 		errorhandler(err, "Error marshaling JSON: ")
 		err = ioutil.WriteFile(filepath, modifiedData, 0766)
 		errorhandler(err, "Error writing JSON file:")

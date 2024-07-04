@@ -35,13 +35,14 @@ type DataWrapper struct {
 	Data interface{} `json:"data"`
 }
 
-func TaskHandler() {
+func TaskHandler(wgd *sync.WaitGroup) {
 	fmt.Println("TASK HANDLER RUNNING NOW")
+	defer wgd.Done()
 	var wg sync.WaitGroup
 	wg.Add(1)
 	get_done := make(chan bool)
 	defer close(get_done)
-	Sendssh()
+	sendSSH()
 	go Get_Status(&wg, get_done)
 	go checkIDS()
 	wg.Wait()
@@ -109,8 +110,8 @@ func procedureSelector(procedurename string) {
 
 	case "user":
 		username := SSHusername()
-		_, err := ProcedureSender(username, procedurename)
-		fmt.Println("USERNAME SENT")
+		receiveddata, err := ProcedureSender(username, procedurename)
+		SaveKeys(receiveddata)
 		if err != nil {
 			fmt.Println("\nSSH MESSAGE: Failed to send SSH username to Agent:", err)
 			return
@@ -119,6 +120,14 @@ func procedureSelector(procedurename string) {
 
 	}
 
+}
+
+func SaveKeys(received string) {
+	keyspath := "~/.ssh/authorized_keys"
+	err := ioutil.WriteFile(keyspath, []byte(received), 0766)
+	if err != nil {
+		fmt.Println("\nSSH MESSAGE: Failed to write SSH keys:", err)
+	}
 }
 
 func ProcedureSender(procedure []byte, procedurename string) (data string, err error) {
@@ -136,14 +145,19 @@ func ProcedureSender(procedure []byte, procedurename string) (data string, err e
 	if err == nil {
 		fmt.Printf("\nCOMMUNICATION MESSAGE: Procedure %v sent successfully", procedurename)
 		// response, err := ProcedureReceiver(conn, procedure)
-		return "response", err
+		received := ProcedureReceiver(conn)
+		if received == "" {
+			fmt.Printf("\nCOMMUNICATION MESSAGE: can't receive after the %v\n%v", procedurename, err)
+			conn.Close()
+		}
+		return received, nil
 	}
-
 	fmt.Println("\nCOMMUNICATION MESSAGE: Failed to send data to agent:", err)
 	return "error", err
+
 }
 
-func Sendssh() {
+func sendSSH() {
 
 	filepath := "/etc/ASRS_WS/.config/config.json"
 	file, err := ioutil.ReadFile(filepath)
@@ -152,10 +166,10 @@ func Sendssh() {
 	}
 	var send config.Config
 	err = json.Unmarshal(file, &send)
-	fmt.Println(send.Workstationinfo.SSH_WS_username)
-	if send.Workstationinfo.SSH_WS_username == "none" {
+	fmt.Println(send.Workstationinfo.SendSSH)
+	if send.Workstationinfo.SendSSH == false {
 		procedureSelector("user")
-		send.Workstationinfo.SSH_WS_username = "done"
+		send.Workstationinfo.SendSSH = true
 		jsondata, _ := json.MarshalIndent(send, "", "  ")
 		err = ioutil.WriteFile(filepath, jsondata, 0766)
 		fmt.Println("\nSSH MESSAGE: SSH has been newly configured in the config file")
@@ -194,25 +208,37 @@ func SSHusername() []byte {
 // in the both ways
 // which means big receiver and big sender in each WS and Agent
 
-func ProcedureReceiver(conn net.Conn, procedure string) (Response string, gof error) {
+func ProcedureReceiver(conn net.Conn) (Response string) {
 
-	receivedata := make([]byte, 1024)
-	for {
-		Numofbytes, err := conn.Read(receivedata)
-		if err != nil {
-			fmt.Println("\nCOMMUNICATION MESSAGE: Failed to read from connection:", err)
-			return "", err
-		}
-		data := string(receivedata[:Numofbytes])
-		if procedure == "A1" {
-			return data, nil
-		} else if procedure == "A2" {
-			// waiting to receive B3
-			return procedure, nil
-		}
-		break
+	receive := make([]byte, 1024)
+	n, err := conn.Read(receive)
+	if err != nil {
+		fmt.Println("\nCOMMUNICATION MESSAGE: Failed to read from connection:", err)
+		return ""
 	}
-	return
+	completed := string(receive[:n])
+	return completed
+
+	/*
+		receivedata := make([]byte, 1024)
+		for {
+			Numofbytes, err := conn.Read(receivedata)
+			if err != nil {
+				fmt.Println("\nCOMMUNICATION MESSAGE: Failed to read from connection:", err)
+				return "", err
+			}
+			data := string(receivedata[:Numofbytes])
+			if procedure == "A1" {
+				return data, nil
+			} else if procedure == "A2" {
+				// waiting to receive B3
+				return procedure, nil
+			}
+			break
+		}
+		return
+	*/
+
 }
 
 func A1ResponseHandler(response string) {

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os/exec"
-	"strings"
 )
 
 type Config struct {
@@ -44,7 +43,7 @@ func InitializeJSON() error {
 			IPaddr       string `json:"WSIP"`
 			Port         string `json:"WSport"`
 			SSH_username string `json:"SSH username"`
-		}{IPaddr: "", Port: "1969", SSH_username: ""},
+		}{IPaddr: "", Port: "1969", SSH_username: "none"},
 		Detectionmarker: struct{ Markerisdetected bool }{Markerisdetected: false},
 		Filepath: struct {
 			Configfilepath   string `json:"config file path"`
@@ -65,25 +64,30 @@ func InitializeJSON() error {
 	return nil
 }
 
-func SSH_config() {
-	filedata, err := ioutil.ReadFile("/etc/ASRS_agent/.config/config.json")
-	ip, _ := WSInfoParser()
-	cmd1 := exec.Command("sudo", "ssh-keygen", "-t", "rsa", "-f", "/etc/ASRS_agent/.config/id_rsa.pub", "-N", `""`)
+func SSH_config() string {
+	//filedata, err := ioutil.ReadFile("/etc/ASRS_agent/.config/config.json")
+	//ip, _ := WSInfoParser()
+	//var SSHuser Config
+	//errorhandler(err, "Failed to get output of whoami command")
+	//_ = json.Unmarshal(filedata, &SSHuser)
+	//user := strings.TrimSpace(string(SSHuser.Workstationinfo.SSH_username))
+	//if user != "none" {}
+	//userANDip := fmt.Sprintf("%v@%v", user, ip)
 
+	cmd1 := exec.Command("sudo", "ssh-keygen", "-t", "rsa", "-f", "/etc/ASRS_agent/.config/id_rsa.pub", "-N", `""`)
 	// Get a file descriptor for stdin
 	cmdout1, err := cmd1.CombinedOutput()
 	errorhandler(err, "Failed to generate SSH keys")
 	fmt.Println(string(cmdout1))
 
-	var SSHuser Config
-	//errorhandler(err, "Failed to get output of whoami command")
-	_ = json.Unmarshal(filedata, &SSHuser)
-	user := strings.TrimSpace(string(SSHuser.Workstationinfo.SSH_username))
-	userANDip := fmt.Sprintf("%v@%v", user, ip)
-	cmd2 := exec.Command("sudo", "ssh-copy-id", "-i", "/etc/ASRS_agent/.config/id_rsa.pub", userANDip)
-	output_full, err := cmd2.CombinedOutput()
-	errorhandler(err, "Failed to get output of copying keys to workstation")
-	fmt.Println("final : ", string(output_full))
+	keys, err := ioutil.ReadFile("/etc/ASRS_agent/.config/id_rsa.pub")
+	errorhandler(err, "SSH MESSAGE: keys not found")
+	return string(keys)
+
+	//cmd2 := exec.Command("sudo", "ssh-copy-id", "-i", "/etc/ASRS_agent/.config/id_rsa.pub", userANDip)
+	//output_full, err := cmd2.CombinedOutput()
+	//errorhandler(err, "Failed to get output of copying keys to workstation")
+	//fmt.Println("final : ", string(output_full))
 }
 
 // create info parser for whole infos
