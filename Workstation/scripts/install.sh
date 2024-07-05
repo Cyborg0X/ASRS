@@ -9,7 +9,6 @@ function main() {
       exit
   fi
 
-  cd ~/golang || exit
   if [[ $1 == "-debian" || $1 == "-ubuntu" ]]; then
       # INSTALL FOR DEBIAN
       echo -e  "\033[1;32mInstalling ASRS Workstation dependencies......"
@@ -78,7 +77,7 @@ function main() {
       sudo mkdir -p /etc/ASRS_WS/.config.json  2>/dev/null
       cd /etc/ASRS_WS/.config && sudo touch config.json 2>/dev/null
       sudo mkdir /etc/ASRS_WS/.database 2>/dev/null
-      cd /etc/ASRS_WS/.database && sudo touch logs.json 2>/dev/null
+      cd   && sudo touch logs.json 2>/dev/null
 
       cd ~/golang || exit
       echo -e  "\033[1;32mDownloading Golang please wait .....\033[0m"
@@ -94,7 +93,7 @@ function main() {
       wait
       echo -e  "\033[1;32mGolang installed [OK]\033[0m"
       sleep 1s 
-      packages=("rsync" "snapper" "ssh" "snort" "openssh-server" "openssh-client")
+      packages=("rsync" "snapper" "ssh" "snort" "openssh-server" "openssh-client" "ufw" "golang-bin")
 
       for pkg in "${packages[@]}"; do
           echo -e  "\033[1;32minstalling $pkg ......\033[0m"
@@ -112,20 +111,20 @@ function main() {
       cp /etc/snort/snort.conf /etc/snort/snort.conf.bak
 
 # Edit the Snort configuration file
-      sed -i "'/^include \$RULE_PATH/a \alert tcp \$EXTERNAL_NET any -> \$HOME_NET any (msg:"COMMAND INJECTION ATTEMPT"; content:"|2e 2f|"; depth:2; sid:1000001; rev:1;)' /etc/snort/snort.conf"
-      sed -i '/^#output alert_full/s/^#//' /etc/snort/snort.conf
-      sed -i 's|output alert_full: .*|output alert_full: /var/log/snort/command_injection_alerts.txt|' /etc/snort/snort.conf
+    # sed -i "'/^include \$RULE_PATH/a \alert tcp \$EXTERNAL_NET any -> \$HOME_NET any (msg:"COMMAND INJECTION ATTEMPT"; content:"|2e 2f|"; depth:2; sid:1000001; rev:1;)' /etc/snort/snort.conf"
+    # sed -i '/^#output alert_full/s/^#//' /etc/snort/snort.conf
+    # sed -i 's|output alert_full: .*|output alert_full: /var/log/snort/command_injection_alerts.txt|' /etc/snort/snort.conf
 
 # Create the log directory
       mkdir -p /var/log/snort
 
 # Start and enable Snort
-      systemctl start snort
-      systemctl enable snort
+      #systemctl start snort
+      #systemctl enable snort
 
       echo "Snort configuration updated. Command injection attack rule added and separate alerts file created."
   # Start Snort
-      /usr/local/bin/snort -c /etc/snort/snort.conf -i eth0 -A console
+     # /usr/local/bin/snort -c /etc/snort/snort.conf -i eth0 -A console
      #..........install SSH server
       install_ssh_server
       backup_ssh_config
