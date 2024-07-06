@@ -3,7 +3,7 @@ package handler
 import "fmt"
 
 func Heal_now() {
-	fmt.Println("Heal now done")
+	fmt.Println("PROCEDURE MESSAGE: HEALING PROCESS HAS BEEN STARTED.....")
 	
 
 }

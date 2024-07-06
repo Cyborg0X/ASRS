@@ -16,7 +16,7 @@ function main() {
       cd /etc/ASRS_WS/.config && sudo touch config.json 2>/dev/null
       mkdir /etc/ASRS_WS/.database 2>/dev/null
       cd /etc/ASRS_WS/.database && sudo touch logs.json 2>/dev/null
-      cd /etc/ASRS_WS/.database && sudo mkdir website_backup database_backup 2>/dev/null
+      cd /etc/ASRS_WS/.database && sudo mkdir website_backup snapshots_backup 2>/dev/null
 
       echo -e "\033[1;33mThe system is debian-based [OK]\033[0m"
 
@@ -74,10 +74,11 @@ function main() {
   elif [[ $1 == "-fedora" ]]; then
       sleep 1s
       echo -e  "\033[1;32mInstalling ASRS Workstation dependencies......"
-      sudo mkdir -p /etc/ASRS_WS/.config.json  2>/dev/null
+       sudo mkdir -p /etc/ASRS_WS/.config  2>/dev/null
       cd /etc/ASRS_WS/.config && sudo touch config.json 2>/dev/null
-      sudo mkdir /etc/ASRS_WS/.database 2>/dev/null
-      cd   && sudo touch logs.json 2>/dev/null
+      mkdir /etc/ASRS_WS/.database 2>/dev/null
+      cd /etc/ASRS_WS/.database && sudo touch logs.json 2>/dev/null
+      cd /etc/ASRS_WS/.database && sudo mkdir website_backup snapshots_backup 2>/dev/null
 
       cd ~/golang || exit
       echo -e  "\033[1;32mDownloading Golang please wait .....\033[0m"

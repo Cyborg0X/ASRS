@@ -166,12 +166,14 @@ func CreateSnapshot() {
 			fmt.Println("Failed to write new snapshot number")
 		}
 		ioutil.WriteFile(filepath, done, 0766)
-
+		remotepath := "/etc/ASRS_WS/.database/snapshots_backup"
+		remote := fmt.Sprintf("%v@ %v:%v", checker.Workstationinfo.SSH_username, checker.Workstationinfo.IPaddr, remotepath)
 		fmt.Println(string(output)) // log it later ALSO set JSON OUTPUT FORMAT IN SNAPPER
-		rsynco := exec.Command("sudo", "rsync", "-aAXv", "--delete", "/var/lib/snapper/configs/root", "/var/lib/snapper/snapshots/root/", "username@192.168.1.100:/path/to/remote/snapper/")
+		rsynco := exec.Command("sudo", "rsync", "-aAXv", "--delete", "/.snapshots", remote)
 		routput, err := rsynco.Output()
+		errorhandler(err, "SNAPPER MESSAGE: Faild to sync snapshots")
 		fmt.Println(string(routput))
-		time.Sleep(time.Hour)
+		time.Sleep(time.Minute * 2)
 
 	}
 	//for loop, wait for 1 hour, set detection marker, take snapshot, remove detection marker

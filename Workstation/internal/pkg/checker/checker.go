@@ -16,7 +16,7 @@ import (
 
 func Depcheck() bool {
 	// return ack of
-	packages := make([]string, 6)
+	packages := make([]string, 2)
 	packages[0] = "rsync"
 	packages[1] = "openssh-server"
 
@@ -40,7 +40,7 @@ func Depcheck() bool {
 		}
 		// don't forget to add some lines to interact with a text-based user interface (TUI)
 	}
-	var feelsgood int = 0
+	var feelsgood int
 	for key, value := range checklist {
 		//fmt.Printf("%v %v\n", key, value)
 		if value == "installed" {
@@ -52,7 +52,7 @@ func Depcheck() bool {
 		}
 	}
 
-	if feelsgood == 1 {
+	if feelsgood == 2 {
 		fmt.Println("ALL PACKAGES HAS BEEN INSTALLED SECCUSSFULLY")
 		fmt.Println("Initilizing config file,,,,,,")
 		filepath := "/etc/ASRS_WS/.config/config.json"
