@@ -18,8 +18,7 @@ func Depcheck() bool {
 	// return ack of
 	packages := make([]string, 6)
 	packages[0] = "rsync"
-	packages[1] = "snapper"
-	packages[2] = "openssh-server"
+	packages[1] = "openssh-server"
 
 	checklist := make(map[string]string)
 	update := exec.Command("sudo", "yum", "update")
@@ -41,7 +40,7 @@ func Depcheck() bool {
 		}
 		// don't forget to add some lines to interact with a text-based user interface (TUI)
 	}
-	var feelsgood int
+	var feelsgood int = 0
 	for key, value := range checklist {
 		//fmt.Printf("%v %v\n", key, value)
 		if value == "installed" {
@@ -53,7 +52,7 @@ func Depcheck() bool {
 		}
 	}
 
-	if feelsgood == 2 {
+	if feelsgood == 1 {
 		fmt.Println("ALL PACKAGES HAS BEEN INSTALLED SECCUSSFULLY")
 		fmt.Println("Initilizing config file,,,,,,")
 		filepath := "/etc/ASRS_WS/.config/config.json"
