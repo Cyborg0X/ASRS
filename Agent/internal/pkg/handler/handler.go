@@ -36,6 +36,7 @@ type DataWrapper struct {
 }
 
 func TaskHandler(wg *sync.WaitGroup, chanconn chan net.Conn, B3 bool) {
+
 	defer wg.Done()
 	if B3 {
 		backchan := make(chan bool)
@@ -120,6 +121,13 @@ func CreateSnapshot() {
 		return
 	}
 	if !checker.Backup.FullSnapshot {
+
+		rootconf := exec.Command("sudo", "snapper", "-c", "root", "create-config", "/")
+		outputroot, err := rootconf.CombinedOutput()
+		if err != nil {
+			fmt.Println("SNAPPER MESSAGE: Can't create root config ", outputroot)
+		}
+
 		config := exec.Command("sudo", "snapper", "-c", asrs_conf, "create-config", mountpoint)
 		output, err := config.CombinedOutput()
 		if err != nil {
@@ -153,7 +161,9 @@ func CreateSnapshot() {
 		}
 		err = ioutil.WriteFile(filepath, Updated_Marker, 0766)
 		counter++
-		create := exec.Command("sudo", "snapper", "-c", asrs_conf, "create", "-d", discription, "--output", "json")
+
+
+		create := exec.Command("sudo", "snapper", "-c", asrs_conf, "create", "-d", discription)
 		output, err := create.CombinedOutput()
 		if err != nil {
 			fmt.Printf("Error creating snapshot number: %v\n ERROR: %v \n output: %v\n", counter, err, string(output))
@@ -206,12 +216,14 @@ func Local_actions(wg *sync.WaitGroup) {
 	go func() {
 		for {
 			CreateSnapshot()
-			time.Sleep(time.Hour)
+			time.Sleep(time.Minute * 2)
 		}
 	}()
 	go func() {
-		time.Sleep(time.Minute)
-		Sync_web_files()
+		for {
+			time.Sleep(time.Minute * 3)
+			Sync_web_files()
+		}
 
 	}()
 
@@ -244,7 +256,7 @@ func Sync_web_files() {
 				for _, back := range website {
 
 					cmd := exec.Command("sudo", "rsync", "-av", "--delete", back, dest)
-					outpit,err := cmd.Output()
+					outpit, err := cmd.Output()
 					errorhandler(err, "RSYNC MESSAGE: Faild to sync webiste files to remote directory ")
 					fmt.Println(string(outpit))
 				}
@@ -252,7 +264,7 @@ func Sync_web_files() {
 				for _, back := range database {
 
 					cmd := exec.Command("sudo", "rsync", "-av", "--delete", back, dest)
-					outpit,err := cmd.Output()
+					outpit, err := cmd.Output()
 					errorhandler(err, "RSYNC MESSAGE: Faild to sync database files to remote directory ")
 					fmt.Println(string(outpit))
 				}
