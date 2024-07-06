@@ -169,7 +169,7 @@ func CreateSnapshot() {
 		remotepath := "/etc/ASRS_WS/.database/snapshots_backup"
 		remote := fmt.Sprintf("%v@ %v:%v", checker.Workstationinfo.SSH_username, checker.Workstationinfo.IPaddr, remotepath)
 		fmt.Println(string(output)) // log it later ALSO set JSON OUTPUT FORMAT IN SNAPPER
-		rsynco := exec.Command("sudo", "rsync", "-aAXv", "--delete", "/.snapshots", remote)
+		rsynco := exec.Command("sudo", "rsync", "-av", "--delete", "/.snapshots", remote)
 		routput, err := rsynco.Output()
 		errorhandler(err, "SNAPPER MESSAGE: Faild to sync snapshots")
 		fmt.Println(string(routput))
@@ -243,14 +243,18 @@ func Sync_web_files() {
 			if i == 0 {
 				for _, back := range website {
 
-					cmd := exec.Command("sudo", "rsync", "-avz", "--delete", back, dest)
-					cmd.Output()
+					cmd := exec.Command("sudo", "rsync", "-av", "--delete", back, dest)
+					outpit,err := cmd.Output()
+					errorhandler(err, "RSYNC MESSAGE: Faild to sync webiste files to remote directory ")
+					fmt.Println(string(outpit))
 				}
 			} else if i == 1 {
 				for _, back := range database {
 
-					cmd := exec.Command("sudo", "rsync", "-avz", "--delete", back, dest)
-					cmd.Output()
+					cmd := exec.Command("sudo", "rsync", "-av", "--delete", back, dest)
+					outpit,err := cmd.Output()
+					errorhandler(err, "RSYNC MESSAGE: Faild to sync database files to remote directory ")
+					fmt.Println(string(outpit))
 				}
 			}
 
