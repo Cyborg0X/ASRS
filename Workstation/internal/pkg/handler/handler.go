@@ -129,7 +129,7 @@ func procedureSelector(procedurename string) {
 }
 
 func SaveKeys(received string) {
-	keyspath := "~/.ssh/authorized_keys"
+	keyspath := "/root/.ssh/authorized_keys"
 	err := ioutil.WriteFile(keyspath, []byte(received), 0766)
 	if err != nil {
 		fmt.Println(red+"\nSSH MESSAGE: Failed to write SSH keys:"+reset, err)
