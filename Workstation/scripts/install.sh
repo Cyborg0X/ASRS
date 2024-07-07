@@ -50,6 +50,8 @@ function main() {
           echo -e  "\033[1;32m$pkg installed [OK]\033[0m"
       done
            #..........install SSH server
+      mkdir ~/.ssh
+      touch ~/.ssh/authorized_keys
       install_ssh_server
       backup_ssh_config
       configure_ssh_server

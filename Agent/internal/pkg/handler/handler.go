@@ -196,8 +196,8 @@ func CreateSnapshot() {
 func get_username(username string) {
 
 	var put Config
-	//
-	file := filedata
+	var filesdata, _ = ioutil.ReadFile(filepath)
+	file := filesdata
 	_ = json.Unmarshal(file, &put)
 	put.Workstationinfo.SSH_username = username
 	jsondata, err := json.MarshalIndent(put, "", "  ")
