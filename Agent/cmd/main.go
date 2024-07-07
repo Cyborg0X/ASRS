@@ -10,13 +10,16 @@ import (
 	"github.com/Cyborg0X/ASRS/Agent/internal/pkg/handler"
 	"github.com/Cyborg0X/ASRS/Agent/internal/pkg/logger"
 )
+var green = "\033[32m"
+var reset = "\033[0m"
+
 
 func main() {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	checkdone := checker.Depcheck()
 	if checkdone == true {
-		fmt.Println("Welcome agent of ASRS")
+		fmt.Println(green+"Welcome agent of ASRS"+reset)
 	}
 	ip, port := handler.WSInfoParser()
 	procedure_chan := make(chan net.Conn, 1)
