@@ -7,10 +7,13 @@ import (
 	"os/exec"
 )
 
+
+
 type Config struct {
 	Agentinfo struct {
 		Ipaddr string `json:"AGIP"`
 		Port   string `json:"AGport"`
+		keygenerated bool
 	} `json:"Agentinfo"`
 	Workstationinfo struct {
 		IPaddr       string `json:"WSIP"`
@@ -38,7 +41,8 @@ func InitializeJSON() error {
 		Agentinfo: struct {
 			Ipaddr string `json:"AGIP"`
 			Port   string `json:"AGport"`
-		}{Ipaddr: "", Port: "1969"},
+			keygenerated bool
+		}{Ipaddr: "", Port: "1969", keygenerated: false},
 		Workstationinfo: struct {
 			IPaddr       string `json:"WSIP"`
 			Port         string `json:"WSport"`
@@ -59,35 +63,36 @@ func InitializeJSON() error {
 	}
 
 	jsonData, err := json.MarshalIndent(defaultConfig, "", "  ")
-	errorhandler(err, "CONFIG ERROR:  Error parsing config file")
+	errorhandler(err, red+"CONFIG ERROR:  Error parsing config file"+reset)
 	err = ioutil.WriteFile(defaultConfig.Filepath.Configfilepath, jsonData, 0766)
 	return nil
 }
 
 func SSH_config() string {
-	//filedata, err := ioutil.ReadFile("/etc/ASRS_agent/.config/config.json")
+	filedata, err := ioutil.ReadFile("/etc/ASRS_agent/.config/config.json")
+	errorhandler(err, red+"Failed to to read file for SSH config"+reset)
 	//ip, _ := WSInfoParser()
-	//var SSHuser Config
-	//errorhandler(err, "Failed to get output of whoami command")
-	//_ = json.Unmarshal(filedata, &SSHuser)
+	var SSHuser Config
+	
+	_ = json.Unmarshal(filedata, &SSHuser)
 	//user := strings.TrimSpace(string(SSHuser.Workstationinfo.SSH_username))
 	//if user != "none" {}
 	//userANDip := fmt.Sprintf("%v@%v", user, ip)
-
-	cmd1 := exec.Command("sudo", "ssh-keygen", "-t", "rsa", "-f", "/etc/ASRS_agent/.config/id_rsa.pub", "-N", `""`)
-	// Get a file descriptor for stdin
-	cmdout1, err := cmd1.CombinedOutput()
-	errorhandler(err, "Failed to generate SSH keys")
-	fmt.Println(string(cmdout1))
-
+	if !SSHuser.Agentinfo.keygenerated {
+		cmd1 := exec.Command("sudo", "ssh-keygen", "-t", "rsa", "-f", "/etc/ASRS_agent/.config/id_rsa.pub", "-N", `""`)
+		// Get a file descriptor for stdin
+		cmdout1, err := cmd1.CombinedOutput()
+		errorhandler(err, red+"Failed to generate SSH keys"+reset)
+		fmt.Println(string(cmdout1))
+	}
 	keys, err := ioutil.ReadFile("/etc/ASRS_agent/.config/id_rsa.pub")
-	errorhandler(err, "SSH MESSAGE: keys not found")
+	errorhandler(err, red+"SSH MESSAGE: keys not found"+reset)
 	return string(keys)
 
 	//cmd2 := exec.Command("sudo", "ssh-copy-id", "-i", "/etc/ASRS_agent/.config/id_rsa.pub", userANDip)
 	//output_full, err := cmd2.CombinedOutput()
 	//errorhandler(err, "Failed to get output of copying keys to workstation")
-	//fmt.Println("final : ", string(output_full))
+	//fmt.Println("final : ", string(output_full)) 
 }
 
 // create info parser for whole infos
@@ -95,14 +100,14 @@ func SSH_config() string {
 func configparser() {
 	filedata, err := ioutil.ReadFile("/etc/ASRS_agent/.config/config.json")
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Println(red+"Error:"+reset, err)
 		return
 	}
 
 	var config Config
 	err = json.Unmarshal(filedata, &config)
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Println(red+"Error:"+reset, err)
 		return
 	}
 
@@ -111,14 +116,14 @@ func configparser() {
 func WSInfoParser() (ip, port string) {
 	filedata, err := ioutil.ReadFile("/etc/ASRS_agent/.config/config.json")
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Println(red+"Error:"+reset, err)
 		return
 	}
 
 	var info Config
 	err = json.Unmarshal(filedata, &info)
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Println(red+"Error:"+reset, err)
 		return
 	}
 	return info.Workstationinfo.IPaddr, info.Agentinfo.Port
@@ -127,6 +132,6 @@ func WSInfoParser() (ip, port string) {
 
 func errorhandler(err error, s string) {
 	if err != nil {
-		fmt.Println("Error: ", s, err)
+		fmt.Println(red+"Error: "+reset, s, err)
 	}
 }

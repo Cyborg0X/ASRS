@@ -11,6 +11,10 @@ import (
 
 	"github.com/Cyborg0X/ASRS/Agent/internal/pkg/handler"
 )
+var red = "\033[31m"
+var green = "\033[32m"
+var reset = "\033[0m"
+var cyan = "\033[36m"
 
 func AG_Listener(ip string, port string, channel chan net.Conn) error {
 	//retryDelay := 5 * time.Second
@@ -22,7 +26,7 @@ func AG_Listener(ip string, port string, channel chan net.Conn) error {
 
 		listenerr, err = net.Listen("tcp", address)
 		if err != nil {
-			fmt.Println("COMMUNICATION MESSAGE: Failed to create a listener", err)
+			fmt.Println(red+"COMMUNICATION MESSAGE: Failed to create a listener"+reset, err)
 			fmt.Println(address)
 			continue
 		}
@@ -30,10 +34,10 @@ func AG_Listener(ip string, port string, channel chan net.Conn) error {
 		for {
 			connf, err = listenerr.Accept()
 			if err != nil {
-				fmt.Println("COMMUNICATION MESSAGE: Failed to accept connection", err)
+				fmt.Println(red+"COMMUNICATION MESSAGE: Failed to accept connection"+reset, err)
 				continue
 			} else {
-				fmt.Println("COMMUNICATION MESSAGE: Connection Accepted")
+				fmt.Println(green+"COMMUNICATION MESSAGE: Connection Accepted"+reset)
 				channel <- connf
 			}
 
@@ -49,7 +53,7 @@ func Response_Sender(message string, conn net.Conn) {
 	for {
 		_, err := conn.Write([]byte(message))
 		if err != nil {
-			fmt.Println("Faild to send ", message)
+			fmt.Println(red+"SENDER MESSAGE: Faild to send"+reset, message)
 			continue
 		}
 	}
@@ -69,7 +73,7 @@ func Connect_to_ws(ipaddr string, port string) {
 
 func errorhandler(err error, s string) {
 	if err != nil {
-		fmt.Println("Error: ", s, err)
+		fmt.Printf(red+"Error :%v\n%v"+reset, s, err)
 	}
 }
 
@@ -79,35 +83,35 @@ func AssignWorkstationIP() error {
 	file, err := ioutil.ReadFile(filepath)
 	if err != nil {
 
-		return fmt.Errorf("Error reading config file: %w", err) // Wrap error with context for other errors
+		return fmt.Errorf(red+"error reading config file: %v"+reset, err) // Wrap error with context for other errors
 	}
 	errorhandler(err, "Error reading config file: ")
 
 	var lookforip handler.Config
 	err = json.Unmarshal(file, &lookforip)
-	errorhandler(err, "Error parsing config file: ")
+	errorhandler(err, red+"Error parsing config file: "+reset)
 
 	// if IP address of the agent and workstation is found then continue without entering the IPs
 
-	fmt.Printf("Do you want to change or set Workstation IP address? N/y : ")
+	fmt.Printf(cyan+"Do you want to change or set Workstation IP address? N/y : "+reset)
 	changeip := bufio.NewReader(os.Stdin)
 	input, _ := changeip.ReadString('\n')
 	g := strings.TrimSpace(input)
 	switch g {
 	case "Y", "y":
-		fmt.Printf("Enter the IP address of the Workstation: ")
+		fmt.Printf(cyan+"Enter the IP address of the Workstation: "+reset)
 		buffer := bufio.NewReader(os.Stdin)
 		lookforip.Workstationinfo.IPaddr, _ = buffer.ReadString('\n')
 		lookforip.Workstationinfo.IPaddr = strings.TrimSpace(lookforip.Workstationinfo.IPaddr) // Remove trailing newline
 		modifiedData, err := json.MarshalIndent(lookforip, "", "  ")
-		errorhandler(err, "Error marshaling JSON: ")
+		errorhandler(err, red+"Error marshaling JSON: "+reset)
 		err = ioutil.WriteFile(filepath, modifiedData, 0766)
-		errorhandler(err, "Error writing JSON file:")
-		fmt.Printf("Your Agent IP address is: %v\n", lookforip.Workstationinfo.IPaddr)
-		fmt.Printf("Your Agent port is: %v\n", lookforip.Workstationinfo.Port)
+		errorhandler(err, red+"Error writing JSON file:"+reset)
+		fmt.Printf(cyan+"Your Agent IP address is: %v\n"+reset, lookforip.Workstationinfo.IPaddr)
+		fmt.Printf(cyan+"Your Agent port is: %v\n"+reset, lookforip.Workstationinfo.Port)
 	case "n", "N":
-		fmt.Printf("Your Agent IP address is: %v\n", lookforip.Workstationinfo.IPaddr)
-		fmt.Printf("Your Agent port is: %v\n", lookforip.Workstationinfo.Port)
+		fmt.Printf(cyan+"Your Agent IP address is: %v\n"+reset, lookforip.Workstationinfo.IPaddr)
+		fmt.Printf(cyan+"Your Agent port is: %v\n"+reset, lookforip.Workstationinfo.Port)
 	}
 
 	return nil
@@ -119,35 +123,35 @@ func AssignAgentIP() error {
 	file, err := ioutil.ReadFile(filepath)
 	if err != nil {
 
-		return fmt.Errorf("Error reading config file: %w", err) // Wrap error with context for other errors
+		return fmt.Errorf(red+"Error reading config file: %w"+reset, err) // Wrap error with context for other errors
 	}
-	errorhandler(err, "Error reading config file: ")
+	errorhandler(err, red+"Error reading config file: "+reset)
 
 	var lookforip handler.Config
 	err = json.Unmarshal(file, &lookforip)
-	errorhandler(err, "Error parsing config file: ")
+	errorhandler(err, red+"Error parsing config file: "+reset)
 
 	// if IP address of the agent and workstation is found then continue without entering the IPs
 
-	fmt.Printf("Do you want to change or set Agent IP address? N/y : ")
+	fmt.Printf(cyan+"Do you want to change or set Agent IP address? N/y : "+reset)
 	changeip := bufio.NewReader(os.Stdin)
 	input, _ := changeip.ReadString('\n')
 	g := strings.TrimSpace(input)
 	switch g {
 	case "Y", "y":
-		fmt.Printf("Enter the IP address of the Agent: ")
+		fmt.Printf(cyan+"Enter the IP address of the Agent: "+reset)
 		buffer := bufio.NewReader(os.Stdin)
 		lookforip.Agentinfo.Ipaddr, _ = buffer.ReadString('\n')
 		lookforip.Agentinfo.Ipaddr = strings.TrimSpace(lookforip.Agentinfo.Ipaddr) // Remove trailing newline
 		modifiedData, err := json.MarshalIndent(lookforip, "", "  ")
-		errorhandler(err, "Error marshaling JSON: ")
+		errorhandler(err, red+"Error marshaling JSON: "+reset)
 		err = ioutil.WriteFile(filepath, modifiedData, 0766)
-		errorhandler(err, "Error writing JSON file:")
-		fmt.Printf("Your Agent IP address is: %v\n", lookforip.Agentinfo.Ipaddr)
-		fmt.Printf("Your Agent port is: %v\n", lookforip.Agentinfo.Port)
+		errorhandler(err, red+"Error writing JSON file:"+reset)
+		fmt.Printf(cyan+"Your Agent IP address is: %v\n"+reset, lookforip.Agentinfo.Ipaddr)
+		fmt.Printf(cyan+"Your Agent port is: %v\n"+reset, lookforip.Agentinfo.Port)
 	case "n", "N":
-		fmt.Printf("Your Agent IP address is: %v\n", lookforip.Agentinfo.Ipaddr)
-		fmt.Printf("Your Agent port is: %v\n", lookforip.Agentinfo.Port)
+		fmt.Printf(cyan+"Your Agent IP address is: %v\n"+reset, lookforip.Agentinfo.Ipaddr)
+		fmt.Printf(cyan+"Your Agent port is: %v\n"+reset, lookforip.Agentinfo.Port)
 	}
 
 	return nil

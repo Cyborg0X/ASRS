@@ -15,6 +15,10 @@ import (
 	"github.com/Cyborg0X/ASRS/Agent/internal/pkg/handler"
 )
 
+var red = "\033[31m"
+var green = "\033[32m"
+var reset = "\033[0m"
+
 func Depcheck() bool {
 	// return ack of
 	packages := make([]string, 6)
@@ -48,17 +52,17 @@ func Depcheck() bool {
 	for key, value := range checklist {
 		//fmt.Printf("%v %v\n", key, value)
 		if value == "installed" {
-			fmt.Printf("%v is installed\n", key)
+			fmt.Printf(green+"%v is installed\n"+reset, key)
 			feelsgood++
 		} else {
-			fmt.Println("Some packages not intalled!!!!")
+			fmt.Println(red+"Some packages not intalled!!!!"+reset)
 			fmt.Println(key, value)
-		}
+		} 
 	}
 
 	if feelsgood == 6 {
-		fmt.Println("ALL PACKAGES HAS BEEN INSTALLED SECCUSSFULLY")
-		fmt.Println("Initilizing config file,,,,,,")
+		fmt.Println(green+"ALL PACKAGES HAS BEEN INSTALLED SECCUSSFULLY"+reset)
+		fmt.Println(green+"Initilizing config file,,,,,,"+reset)
 		filepath := "/etc/ASRS_agent/.config/config.json"
 
 		_, err := ioutil.ReadFile(filepath)
@@ -67,24 +71,24 @@ func Depcheck() bool {
 		if os.IsNotExist(err) || file.Size() == 0 {
 			err := handler.InitializeJSON()
 			if err != nil {
-				fmt.Println("Error initialize config file")
+				fmt.Println(red+"Error initialize config file"+reset)
 			}
 
 		}
 
 		err = communication.AssignWorkstationIP()
 		if err != nil {
-			fmt.Println("Erroring assigning Workstation IP address")
+			fmt.Println(red+"Erroring assigning Workstation IP address"+reset)
 		}
 		err = communication.AssignAgentIP()
 		if err != nil {
-			fmt.Println("Erroring assigning Agent IP address")
+			fmt.Println(red+"Erroring assigning Agent IP address"+reset)
 		}
 		var detector handler.Config
-		fmt.Println("marker : ", detector.Detectionmarker)
+		fmt.Println(green+"marker : "+reset, detector.Detectionmarker)
 
 	} else {
-		panic("Error checking startup")
+		panic(red+"Error checking startup"+reset)
 	}
 	fmt.Fprint(os.Stdout, "\x1b[H\x1b[2J")
 	ack := true

@@ -19,6 +19,10 @@ import (
 
 }
 */
+
+var red = "\033[31m"
+var reset = "\033[0m"
+
 type Config struct {
 	Agentinfo struct {
 		Ipaddr             string `json:"AGIP"`
@@ -78,14 +82,14 @@ type Logs struct {
 func AgentInfoParser() (ip, port string) {
 	filedata, err := ioutil.ReadFile("/etc/ASRS_WS/.config/config.json")
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Println(red+"Error:"+reset, err)
 		return
 	}
 
 	var info Config
 	err = json.Unmarshal(filedata, &info)
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Println(red+"Error:"+reset, err)
 		return
 	}
 	return info.Workstationinfo.IPaddr, info.Workstationinfo.Port
@@ -94,6 +98,6 @@ func AgentInfoParser() (ip, port string) {
 
 func errorhandler(err error, s string) {
 	if err != nil {
-		fmt.Println("Error: ", s, err)
+		fmt.Println(red+"Error: "+reset, s, err)
 	}
 }
