@@ -26,11 +26,11 @@ func Depcheck() bool {
 	packages[1] = "openssh-server"
 
 	checklist := make(map[string]string)
-	update := exec.Command("sudo", "yum", "update")
+	update := exec.Command("sudo", "dnf", "update")
 	update.Run()
 	for i := range packages {
 		checkpkg := exec.Command("rpm", "-qi", packages[i])
-		install := exec.Command("sudo", "yum", "install", packages[i], "-y")
+		install := exec.Command("sudo", "dnf", "install", packages[i], "-y")
 		output, err := checkpkg.CombinedOutput()
 		outputstr := string(output)
 		if err != nil {

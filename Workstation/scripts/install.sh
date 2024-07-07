@@ -83,13 +83,13 @@ function main() {
       cd ~/golang || exit
       echo -e  "\033[1;32mDownloading Golang please wait .....\033[0m"
       sudo sudo dnf update && sudo dnf install wget tar -y > /dev/null 2>&1
-      sudo wget https://go.dev/dl/go1.22.2.linux-amd64.tar.gz > /dev/null 2>&1 &
+      #sudo wget https://go.dev/dl/go1.22.2.linux-amd64.tar.gz > /dev/null 2>&1 &
       wget_pid=$!
       wait $wget_pid
       echo -e  "\033[1;32mGolang Downloaded [OK]"
       sleep 1s
       echo -e  "\033[1;32minstalling Golang V1.22.2 ......\033[0m"
-      sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf ~/golang/go1.22.2.linux-amd64.tar.gz
+      #sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf ~/golang/go1.22.2.linux-amd64.tar.gz
       export PATH=$PATH:/usr/local/go/bin
       wait
       echo -e  "\033[1;32mGolang installed [OK]\033[0m"
@@ -98,15 +98,15 @@ function main() {
 
       for pkg in "${packages[@]}"; do
           echo -e  "\033[1;32minstalling $pkg ......\033[0m"
-          sudo yum install "$pkg" -y > /dev/null 2>&1
+          sudo dnf install "$pkg" -y > /dev/null 2>&1
           inst_pid=$!
           wait $inst_pid
           echo -e  "\033[1;32m$pkg installed [OK]\033[0m"
       done
 # Install dependencies
-      yum update -y
-      yum install -y epel-release
-      yum install -y snort
+      dnf update -y
+      dnf install -y epel-release
+      dnf install -y snort
 
 # Backup the Snort configuration file
       cp /etc/snort/snort.conf /etc/snort/snort.conf.bak
@@ -158,8 +158,8 @@ function install_ssh_server() {
   if [ -x "$(command -v apt)" ]; then
     sudo apt update
     sudo apt install -y openssh-server
-  elif [ -x "$(command -v yum)" ]; then
-    sudo yum install -y openssh-server
+  elif [ -x "$(command -v dnf)" ]; then
+    sudo dnf install -y openssh-server
   elif [ -x "$(command -v dnf)" ]; then
     sudo dnf install -y openssh-server
   elif [ -x "$(command -v pacman)" ]; then
@@ -184,8 +184,8 @@ function backup_ssh_config() {
 # Function to configure the SSH server for passwordless authentication 
 function configure_ssh_server() {
   sudo sed -i 's/^#Port 22/#Port 22/' "${SSH_CONFIG_FILE}"
-  sudo sed -i 's/^#PermitRootLogin prohibit-password/#PermitRootLogin no/' "${SSH_CONFIG_FILE}"
-  sudo sed -i 's/^#PasswordAuthentication yes/#PasswordAuthentication no/' "${SSH_CONFIG_FILE}"
+  sudo sed -i 's/^#PermitRootLogin /#PermitRootLogin no/' "${SSH_CONFIG_FILE}"
+  sudo sed -i 's/^#PasswordAuthentication /#PasswordAuthentication no/' "${SSH_CONFIG_FILE}"
   sudo sed -i 's/^#PubkeyAuthentication yes/#PubkeyAuthentication yes/' "${SSH_CONFIG_FILE}"
 }
 
