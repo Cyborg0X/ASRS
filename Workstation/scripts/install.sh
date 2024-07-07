@@ -184,9 +184,9 @@ function backup_ssh_config() {
 # Function to configure the SSH server for passwordless authentication 
 function configure_ssh_server() {
   sudo sed -i 's/^#Port 22/#Port 22/' "${SSH_CONFIG_FILE}"
-  sudo sed -i 's/^#PermitRootLogin /#PermitRootLogin no/' "${SSH_CONFIG_FILE}"
-  sudo sed -i 's/^#PasswordAuthentication /#PasswordAuthentication no/' "${SSH_CONFIG_FILE}"
-  sudo sed -i 's/^#PubkeyAuthentication yes/#PubkeyAuthentication yes/' "${SSH_CONFIG_FILE}"
+  sudo sed -i 's/^#PermitRootLogin prohibit-password/#PermitRootLogin no/' "${SSH_CONFIG_FILE}"
+  sudo sed -i 's/^#PasswordAuthentication yes/#PasswordAuthentication no/' "${SSH_CONFIG_FILE}"
+  sudo sed -i 's/^#PubkeyAuthentication no/#PubkeyAuthentication yes/' "${SSH_CONFIG_FILE}"
 }
 
 
