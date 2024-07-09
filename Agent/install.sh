@@ -34,6 +34,8 @@ if [[ $1 == "-debian" || $1 == "-ubuntu" ]]; then
     echo -e  "\033[1;32minstalling Golang V1.22.2 ......\033[0m"
     sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf ~/golang/go1.22.2.linux-amd64.tar.gz
     export PATH=$PATH:/usr/local/go/bin
+    SCONFIG_FILE="/etc/default/snapper"
+    sudo sed -i 's/^DISABLE_APT_SNAPSHOT="no"/DISABLE_APT_SNAPSHOT="yes"/' "${SCONFIG_FILE}"
     sudo snapper delete-config
     wait
     echo -e  "\033[1;32mGolang installed [OK]\033[0m"
