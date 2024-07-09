@@ -264,6 +264,7 @@ func Sync_web_files() {
 		for i, dir := range WSdir {
 
 			dest := fmt.Sprintf("%v@%v:%v", conf.Workstationinfo.SSH_username, conf.Workstationinfo.IPaddr, dir)
+			fmt.Println(dest)
 			if i == 0 {
 				for _, back := range website {
 
