@@ -74,13 +74,13 @@ elif [[ $1 == "-fedora" ]]; then
     cd ~/golang || exit
     echo -e  "\033[1;32mDownloading Golang please wait .....\033[0m"
     sudo sudo dnf update && sudo dnf install wget tar -y > /dev/null 2>&1
-    sudo wget https://go.dev/dl/go1.22.2.linux-amd64.tar.gz > /dev/null 2>&1 &
+    #sudo wget https://go.dev/dl/go1.22.2.linux-amd64.tar.gz > /dev/null 2>&1 &
     wget_pid=$!
     wait $wget_pid
     echo -e  "\033[1;32mGolang Downloaded [OK]"
     sleep 1s
     echo -e  "\033[1;32minstalling Golang V1.22.2 ......\033[0m"
-    sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf ~/golang/go1.22.2.linux-amd64.tar.gz
+    #sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf ~/golang/go1.22.2.linux-amd64.tar.gz
     export PATH=$PATH:/usr/local/go/bin
 
     wait

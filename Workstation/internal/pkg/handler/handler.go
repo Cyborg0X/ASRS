@@ -17,7 +17,6 @@ import (
 var red = "\033[31m"
 var green = "\033[32m"
 var reset = "\033[0m"
-var cyan = "\033[36m"
 
 type DataType int
 
@@ -42,12 +41,12 @@ type DataWrapper struct {
 
 func TaskHandler(wgd *sync.WaitGroup) {
 	fmt.Println(green + "TASK HANDLER RUNNING NOW" + reset)
+	sendSSH()
 	defer wgd.Done()
 	var wg sync.WaitGroup
 	wg.Add(1)
 	get_done := make(chan bool)
 	defer close(get_done)
-	sendSSH()
 	go Get_Status(&wg, get_done)
 	go checkIDS()
 	wg.Wait()
@@ -115,7 +114,7 @@ func procedureSelector(procedurename string) {
 
 	case "user":
 		username := SSHusername()
-		fmt.Println(username)
+		fmt.Println(string(username))
 		receiveddata, err := ProcedureSender(username, procedurename)
 		SaveKeys(receiveddata)
 		if err != nil {
@@ -172,6 +171,9 @@ func sendSSH() {
 	}
 	var send config.Config
 	err = json.Unmarshal(file, &send)
+	if err != nil {
+		fmt.Println("SSH MESSAGE: Failed to Unmarshal for SSH USERNAME")
+	}
 	fmt.Println(send.Workstationinfo.SendSSH)
 	if !send.Workstationinfo.SendSSH {
 		procedureSelector("user")
@@ -179,10 +181,7 @@ func sendSSH() {
 		jsondata, _ := json.MarshalIndent(send, "", "  ")
 		err = ioutil.WriteFile(filepath, jsondata, 0766)
 		fmt.Println(green + "\nSSH MESSAGE: SSH has been newly configured in the config file" + reset)
-
-		return
 	}
-	return
 }
 
 func SSHusername() []byte {

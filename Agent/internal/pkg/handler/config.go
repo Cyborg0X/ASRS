@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"os/exec"
 )
 
@@ -78,12 +79,16 @@ func SSH_config() string {
 	//user := strings.TrimSpace(string(SSHuser.Workstationinfo.SSH_username))
 	//if user != "none" {}
 	//userANDip := fmt.Sprintf("%v@%v", user, ip)
-	if !SSHuser.Agentinfo.keygenerated {
+	_,err = os.Stat("/etc/ASRS_agent/.config/")
+	if os.IsNotExist(err) {
 		cmd1 := exec.Command("sudo", "ssh-keygen", "-t", "rsa", "-f", "/etc/ASRS_agent/.config/id_rsa.pub", "-N", `""`)
 		// Get a file descriptor for stdin
 		cmdout1, err := cmd1.CombinedOutput()
-		errorhandler(err, red+"Failed to generate SSH keys"+reset)
+		
+		fmt.Println(red+"SSH MESSAGE: Failed to generate SSH keys"+reset,err)
 		fmt.Println(string(cmdout1))
+	} else if err != nil {
+		fmt.Println("SSH MESSAGE: Error checking file:", err)
 	}
 	keys, err := ioutil.ReadFile("/etc/ASRS_agent/.config/id_rsa.pub")
 	errorhandler(err, red+"SSH MESSAGE: keys not found"+reset)
@@ -92,7 +97,7 @@ func SSH_config() string {
 	//cmd2 := exec.Command("sudo", "ssh-copy-id", "-i", "/etc/ASRS_agent/.config/id_rsa.pub", userANDip)
 	//output_full, err := cmd2.CombinedOutput()
 	//errorhandler(err, "Failed to get output of copying keys to workstation")
-	//fmt.Println("final : ", string(output_full)) 
+	//fmt.Println("final : ", string(output_full))
 }
 
 // create info parser for whole infos

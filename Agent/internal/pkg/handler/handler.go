@@ -201,7 +201,7 @@ func get_username(username string) {
 	_ = json.Unmarshal(file, &put)
 	put.Workstationinfo.SSH_username = username
 	jsondata, err := json.MarshalIndent(put, "", "  ")
-	errorhandler(err, red+"can't narshal username"+reset)
+	errorhandler(err, red+"can't marshal username"+reset)
 	ioutil.WriteFile(filepath, jsondata, 0766)
 }
 
@@ -218,13 +218,14 @@ func Local_actions(wg *sync.WaitGroup) {
 	defer wg.Done()
 	go func() {
 		for {
-			CreateSnapshot()
 			time.Sleep(time.Minute * 2)
+			CreateSnapshot()
+			
 		}
 	}()
 	go func() {
 		for {
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Second * 15)
 			Sync_web_files()
 		}
 
