@@ -127,15 +127,15 @@ func procedureSelector(procedurename string) {
 
 }
 
-func SaveKeys(received string) {
+func SaveKeys(received []byte) {
 	keyspath := "/root/.ssh/authorized_keys"
-	err := ioutil.WriteFile(keyspath, []byte(received), 0766)
+	err := ioutil.WriteFile(keyspath, received, 0766)
 	if err != nil {
 		fmt.Println(red+"\nSSH MESSAGE: Failed to write SSH keys:"+reset, err)
 	}
 }
 
-func ProcedureSender(procedure []byte, procedurename string) (data string, err error) {
+func ProcedureSender(procedure []byte, procedurename string) (data []byte, err error) {
 
 	var ip, port = config.AgentInfoParser()
 
@@ -150,16 +150,15 @@ func ProcedureSender(procedure []byte, procedurename string) (data string, err e
 	if err == nil {
 		fmt.Printf(green+"\nCOMMUNICATION MESSAGE: Procedure %v sent successfully"+reset, procedurename)
 		// response, err := ProcedureReceiver(conn, procedure)
-		received := ProcedureReceiver(conn)
-		if received == "" {
+		received, err := ProcedureReceiver(conn)
+		if err != nil {
 			fmt.Printf(red+"\nCOMMUNICATION MESSAGE: can't receive after the %v\n%v"+reset, procedurename, err)
-			conn.Close()
+			
 		}
 		return received, nil
 	}
 	fmt.Println(red+"\nCOMMUNICATION MESSAGE: Failed to send data to agent:"+reset, err)
-	return "error", err
-
+	return
 }
 
 func sendSSH() {
@@ -213,16 +212,16 @@ func SSHusername() []byte {
 // in the both ways
 // which means big receiver and big sender in each WS and Agent
 
-func ProcedureReceiver(conn net.Conn) (Response string) {
+func ProcedureReceiver(conn net.Conn) (Response []byte, err error) {
 
 	receive := make([]byte, 1024)
 	n, err := conn.Read(receive)
 	if err != nil {
 		fmt.Println(red+"\nCOMMUNICATION MESSAGE: Failed to read from connection:"+reset, err)
-		return ""
+		return []byte{}, err
 	}
-	completed := string(receive[:n])
-	return completed
+	return receive[:n], nil
+	
 
 	/*
 		receivedata := make([]byte, 1024)

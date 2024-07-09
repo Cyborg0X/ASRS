@@ -69,7 +69,7 @@ func InitializeJSON() error {
 	return nil
 }
 
-func SSH_config() string {
+func SSH_config() []byte {
 	fmt.Println("SSH CONFIG STARTED")
 	filedata, err := ioutil.ReadFile("/etc/ASRS_agent/.config/config.json")
 	errorhandler(err, red+"Failed to to read file for SSH config"+reset)
@@ -91,9 +91,10 @@ func SSH_config() string {
 	} else if err != nil {
 		fmt.Println("SSH MESSAGE: Error checking file:", err)
 	}
+
 	keys, err := ioutil.ReadFile("/etc/ASRS_agent/.config/id_rsa.pub")
 	errorhandler(err, red+"SSH MESSAGE: keys not found"+reset)
-	return string(keys)
+	return keys
 
 	//cmd2 := exec.Command("sudo", "ssh-copy-id", "-i", "/etc/ASRS_agent/.config/id_rsa.pub", userANDip)
 	//output_full, err := cmd2.CombinedOutput()

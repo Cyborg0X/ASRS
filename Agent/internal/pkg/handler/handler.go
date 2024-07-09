@@ -103,7 +103,7 @@ func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn) {
 					fmt.Println(green+"SSH MESSAGE: SSH username RECEIVED"+reset)
 					// sending keys for SSH rsync
 					keys := SSH_config()
-					conneceted.Write([]byte(keys))
+					conneceted.Write(keys)
 					conneceted.Close()
 
 				}
