@@ -16,7 +16,7 @@ var reset = "\033[0m"
 
 var k int
 var filepath = "/etc/ASRS_agent/.config/config.json"
-var filedata, _ = ioutil.ReadFile(filepath)
+
 
 type DataType int
 
@@ -40,10 +40,11 @@ type DataWrapper struct {
 }
 
 func TaskHandler(wg *sync.WaitGroup, chanconn chan net.Conn, B3 bool) {
-
+	fmt.Println("TASK HANDLER STARTED")
 	defer wg.Done()
 	if B3 {
 		backchan := make(chan bool)
+		fmt.Println("RESTORE BACKUP STARTED")
 		go Restore_Backup(backchan)
 		<-backchan
 		return
@@ -53,12 +54,14 @@ func TaskHandler(wg *sync.WaitGroup, chanconn chan net.Conn, B3 bool) {
 	if !B3 {
 		go Local_actions(wg)
 	}
+
 	go ProcedureHandler(wg, chanconn)
 	wg.Wait()
 
 }
 
 func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn) {
+	fmt.Println("PROCEDURE HANDLER STARTED")
 	defer wg.Done()
 
 	for {
@@ -93,6 +96,7 @@ func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn) {
 						go Heal_now()
 					}
 				case TypeSSH:
+					fmt.Println("RECEVING SSH SHIT STARTED")
 					dataMap := wrapper.Data.(map[string]interface{})
 					userbame := dataMap["SSH username"].(string)
 					go get_username(userbame)
@@ -112,10 +116,12 @@ func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn) {
 }
 
 func CreateSnapshot() {
+	fmt.Println("CREATE SNAPSHOT STARTED")
 	var counter int
 	asrs_conf := "ASRS_CONF"
 	discription := "Incremental Backup"
 	mountpoint := "/"
+	filedata, _ := ioutil.ReadFile(filepath)
 	snapshotlogs := filedata
 
 	var checker Config
@@ -194,7 +200,7 @@ func CreateSnapshot() {
 }
 
 func get_username(username string) {
-
+	fmt.Println("GET SSH USERNAME STARTED")
 	var put Config
 	var filesdata, _ = ioutil.ReadFile(filepath)
 	file := filesdata
@@ -214,6 +220,7 @@ func ProcedureReceiver() {
 }
 
 func Local_actions(wg *sync.WaitGroup) {
+	fmt.Println("LOCAL ACTIONS STARTED")
 	// receive channel from B2 to terminate
 	defer wg.Done()
 	go func() {
@@ -234,10 +241,11 @@ func Local_actions(wg *sync.WaitGroup) {
 }
 
 func Sync_web_files() {
+	fmt.Println("SYNC WEB FILES STARTED")
 	// for loop and wait for sync file and log it
 	var conf Config
-	data := filedata
-	err := json.Unmarshal(data, &conf)
+	filedata, _ := ioutil.ReadFile(filepath)
+	err := json.Unmarshal(filedata, &conf)
 	errorhandler(err, red+"SYNC WEB FILES MESSAGE: Failed to unmarshal config"+reset)
 	var website = []string{
 		"/var/www/html/",
@@ -260,7 +268,7 @@ func Sync_web_files() {
 				for _, back := range website {
 
 					cmd := exec.Command("sudo", "rsync", "-av", "--delete", back, dest)
-					outpit, err := cmd.Output()
+					outpit, err := cmd.CombinedOutput()
 					errorhandler(err, red+"RSYNC MESSAGE: Faild to sync webiste files to remote directory"+reset)
 					fmt.Println(string(outpit))
 				}
@@ -268,7 +276,7 @@ func Sync_web_files() {
 				for _, back := range database {
 
 					cmd := exec.Command("sudo", "rsync", "-av", "--delete", back, dest)
-					outpit, err := cmd.Output()
+					outpit, err := cmd.CombinedOutput()
 					errorhandler(err, red+"RSYNC MESSAGE: Faild to sync database files to remote directory"+reset)
 					fmt.Println(string(outpit))
 				}

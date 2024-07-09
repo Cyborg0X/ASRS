@@ -57,7 +57,7 @@ var reset = "\033[0m"
 var cyan = "\033[36m"
 
 func WS_dailer(ip, port string) (net.Conn, error) {
-
+	fmt.Println("WS DAILER STARTED")
 	retryDelay := 3 * time.Second
 	var err error
 	var conn net.Conn

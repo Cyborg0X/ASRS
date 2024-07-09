@@ -92,7 +92,7 @@ func AgentInfoParser() (ip, port string) {
 		fmt.Println(red+"Error:"+reset, err)
 		return
 	}
-	return info.Workstationinfo.IPaddr, info.Workstationinfo.Port
+	return info.Agentinfo.Ipaddr, info.Agentinfo.Port
 
 }
 

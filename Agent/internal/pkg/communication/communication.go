@@ -17,6 +17,7 @@ var reset = "\033[0m"
 var cyan = "\033[36m"
 
 func AG_Listener(ip string, port string, channel chan net.Conn) error {
+	fmt.Println("AG LISTNER STARTED")
 	//retryDelay := 5 * time.Second
 	var listenerr net.Listener
 	var err error
@@ -50,6 +51,7 @@ func AG_dialer() {
 }
 
 func Response_Sender(message string, conn net.Conn) {
+	fmt.Println("RESPONSE SENDER STARTED")
 	for {
 		_, err := conn.Write([]byte(message))
 		if err != nil {

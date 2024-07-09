@@ -70,6 +70,7 @@ func InitializeJSON() error {
 }
 
 func SSH_config() string {
+	fmt.Println("SSH CONFIG STARTED")
 	filedata, err := ioutil.ReadFile("/etc/ASRS_agent/.config/config.json")
 	errorhandler(err, red+"Failed to to read file for SSH config"+reset)
 	//ip, _ := WSInfoParser()
@@ -79,7 +80,7 @@ func SSH_config() string {
 	//user := strings.TrimSpace(string(SSHuser.Workstationinfo.SSH_username))
 	//if user != "none" {}
 	//userANDip := fmt.Sprintf("%v@%v", user, ip)
-	_,err = os.Stat("/etc/ASRS_agent/.config/")
+	_,err = os.Stat("/etc/ASRS_agent/.config/id_rsa.pub")
 	if os.IsNotExist(err) {
 		cmd1 := exec.Command("sudo", "ssh-keygen", "-t", "rsa", "-f", "/etc/ASRS_agent/.config/id_rsa.pub", "-N", `""`)
 		// Get a file descriptor for stdin
@@ -102,19 +103,18 @@ func SSH_config() string {
 
 // create info parser for whole infos
 
-func configparser() {
+func configparser() *Config {
 	filedata, err := ioutil.ReadFile("/etc/ASRS_agent/.config/config.json")
 	if err != nil {
 		fmt.Println(red+"Error:"+reset, err)
-		return
 	}
 
 	var config Config
 	err = json.Unmarshal(filedata, &config)
 	if err != nil {
 		fmt.Println(red+"Error:"+reset, err)
-		return
 	}
+	return &config
 
 }
 
