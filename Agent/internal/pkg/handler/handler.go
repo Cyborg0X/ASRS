@@ -31,7 +31,7 @@ type A1A2 struct {
 
 type SSH struct {
 	Proceduree string `json:"procedure"`
-	Username   map[int]string `json:"SSH username"`
+	Username   interface{} `json:"SSH username"`
 }
 
 type DataWrapper struct {
@@ -98,8 +98,8 @@ func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn) {
 				case TypeSSH:
 					fmt.Println("RECEVING SSH SHIT STARTED")
 					dataMap := wrapper.Data.(map[string]interface{})
-					userbame := dataMap["SSH username"].(map[int]string)
-					go get_username(userbame)
+					userbame := dataMap["SSH username"]
+					go get_username(userbame.([]string))
 					fmt.Println(green+"SSH MESSAGE: SSH username RECEIVED"+reset)
 					// sending keys for SSH rsync
 					keys := SSH_config()
@@ -199,7 +199,7 @@ func CreateSnapshot() {
 
 }
 
-func get_username(username map[int]string) {
+func get_username(username[]string) {
 	fmt.Println("GET SSH USERNAME STARTED")
 	var put Config
 	passw := "/etc/ASRS_agent/.config/pass.txt"
