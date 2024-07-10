@@ -202,6 +202,7 @@ func CreateSnapshot() {
 func get_username(username map[int]string) {
 	fmt.Println("GET SSH USERNAME STARTED")
 	var put Config
+	passw := "/etc/ASRS_agent/.config/pass.txt"
 	var filesdata, _ = ioutil.ReadFile(filepath)
 	file := filesdata
 	_ = json.Unmarshal(file, &put)
@@ -210,6 +211,7 @@ func get_username(username map[int]string) {
 	jsondata, err := json.MarshalIndent(put, "", "  ")
 	errorhandler(err, red+"can't marshal username"+reset)
 	ioutil.WriteFile(filepath, jsondata, 0766)
+	ioutil.WriteFile(passw, []byte(username[2]), 0766)
 }
 
 func SSHkeys() {
@@ -256,7 +258,7 @@ func Sync_web_files() {
 		"/var/lib/mysql/",
 		"/var/lib/pgsql/",
 	}
-
+	pass:= "--password-file=/etc/ASRS_agent/.config/pass.txt"
 	var WSdir = []string{
 		"/etc/ASRS_WS/.database/database_backup",
 		"/etc/ASRS_WS/.database/website_backup",
@@ -269,7 +271,7 @@ func Sync_web_files() {
 			if i == 0 {
 				for _, back := range website {
 
-					cmd := exec.Command("sudo", "rsync", "-av", "--delete", back, dest)
+					cmd := exec.Command("sudo", "rsync", "-av", "--delete",pass, back, dest)
 					outpit, err := cmd.CombinedOutput()
 					errorhandler(err, red+"RSYNC MESSAGE: Faild to sync webiste files to remote directory"+reset)
 					fmt.Println(string(outpit))
