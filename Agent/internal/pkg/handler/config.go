@@ -73,9 +73,7 @@ func InitializeJSON() error {
 
 func SSH_config() []byte {
 	fmt.Println("SSH CONFIG STARTED")
-	file, err := os.Open("/etc/ASRS_agent/.config/id_rsa.pub")
-	errorhandler(err, "SSH MESSAGE: Can't open SSH key file")
-	defer file.Close()
+
 	info,err := os.Stat("/etc/ASRS_agent/.config/id_rsa.pub")
 	if os.IsNotExist(err) {
 		cmd1 := exec.Command("sudo", "ssh-keygen", "-t", "rsa", "-f", "/etc/ASRS_agent/.config/id_rsa.pub", "-N", `""`)
@@ -88,6 +86,9 @@ func SSH_config() []byte {
 		fmt.Println("SSH MESSAGE: Error checking file:", err)
 	}
 	keys := make([]byte, info.Size())
+	file, err := os.Open("/etc/ASRS_agent/.config/id_rsa.pub")
+	errorhandler(err, "SSH MESSAGE: Can't open SSH key file")
+	defer file.Close()
 	_,err = file.Read(keys)
 	errorhandler(err, red+"SSH MESSAGE: can't read keys file"+reset)
 	return keys
