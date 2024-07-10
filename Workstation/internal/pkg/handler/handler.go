@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -213,15 +214,22 @@ func SSHusername() []byte {
 // which means big receiver and big sender in each WS and Agent
 
 func ProcedureReceiver(conn net.Conn) (Response []byte, err error) {
-
-	receive := make([]byte, 1024)
-	n, err := conn.Read(receive)
-	if err != nil {
-		fmt.Println(red+"\nCOMMUNICATION MESSAGE: Failed to read from connection:"+reset, err)
-		return []byte{}, err
-	}
-	return receive[:n], nil
 	
+
+	buffer := make([]byte, 1024)
+	receveddata := bytes.Buffer{}
+	for{
+		n, err := conn.Read(buffer)
+		if err != nil {
+			fmt.Println(red+"\nCOMMUNICATION MESSAGE: Failed to read from connection:"+reset, err)
+		}
+		receveddata.Write(buffer[:n])
+		if n < len(buffer) {
+			break
+		}	
+	}
+	data := receveddata.Bytes()
+	return data, err
 
 	/*
 		receivedata := make([]byte, 1024)

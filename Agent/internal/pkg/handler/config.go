@@ -71,16 +71,10 @@ func InitializeJSON() error {
 
 func SSH_config() []byte {
 	fmt.Println("SSH CONFIG STARTED")
-	filedata, err := ioutil.ReadFile("/etc/ASRS_agent/.config/config.json")
-	errorhandler(err, red+"Failed to to read file for SSH config"+reset)
-	//ip, _ := WSInfoParser()
-	var SSHuser Config
-	
-	_ = json.Unmarshal(filedata, &SSHuser)
-	//user := strings.TrimSpace(string(SSHuser.Workstationinfo.SSH_username))
-	//if user != "none" {}
-	//userANDip := fmt.Sprintf("%v@%v", user, ip)
-	_,err = os.Stat("/etc/ASRS_agent/.config/id_rsa.pub")
+	file, err := os.Open("/etc/ASRS_agent/.config/id_rsa.pub")
+	errorhandler(err, "SSH MESSAGE: Can't open SSH key file")
+	defer file.Close()
+	info,err := os.Stat("/etc/ASRS_agent/.config/id_rsa.pub")
 	if os.IsNotExist(err) {
 		cmd1 := exec.Command("sudo", "ssh-keygen", "-t", "rsa", "-f", "/etc/ASRS_agent/.config/id_rsa.pub", "-N", `""`)
 		// Get a file descriptor for stdin
@@ -91,15 +85,10 @@ func SSH_config() []byte {
 	} else if err != nil {
 		fmt.Println("SSH MESSAGE: Error checking file:", err)
 	}
-
-	keys, err := ioutil.ReadFile("/etc/ASRS_agent/.config/id_rsa.pub")
-	errorhandler(err, red+"SSH MESSAGE: keys not found"+reset)
+	keys := make([]byte, info.Size())
+	_,err = file.Read(keys)
+	errorhandler(err, red+"SSH MESSAGE: can't read keys file"+reset)
 	return keys
-
-	//cmd2 := exec.Command("sudo", "ssh-copy-id", "-i", "/etc/ASRS_agent/.config/id_rsa.pub", userANDip)
-	//output_full, err := cmd2.CombinedOutput()
-	//errorhandler(err, "Failed to get output of copying keys to workstation")
-	//fmt.Println("final : ", string(output_full))
 }
 
 // create info parser for whole infos
