@@ -33,7 +33,7 @@ func Depcheck() bool {
 	update.Run()
 	for i := range packages {
 		checkpkg := exec.Command("sudo", "dpkg", "-s", packages[i])
-		install := exec.Command("sudo", "apt", "install", packages[i], "-y")
+		//install := exec.Command("sudo", "apt", "install", packages[i], "-y")
 		output, err := checkpkg.CombinedOutput()
 		outputstr := string(output)
 		if err != nil {
