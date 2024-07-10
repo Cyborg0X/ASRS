@@ -20,6 +20,7 @@ type Config struct {
 		IPaddr       string `json:"WSIP"`
 		Port         string `json:"WSport"`
 		SSH_username string `json:"SSH username"`
+		SSHpass string `json:"password"`
 	} `json:"Workstationinfo"`
 
 	Detectionmarker struct {
@@ -48,7 +49,8 @@ func InitializeJSON() error {
 			IPaddr       string `json:"WSIP"`
 			Port         string `json:"WSport"`
 			SSH_username string `json:"SSH username"`
-		}{IPaddr: "", Port: "1969", SSH_username: "none"},
+			SSHpass string `json:"password"`
+		}{IPaddr: "", Port: "1969", SSH_username: "none", SSHpass: "none"},
 		Detectionmarker: struct{ Markerisdetected bool }{Markerisdetected: false},
 		Filepath: struct {
 			Configfilepath   string `json:"config file path"`

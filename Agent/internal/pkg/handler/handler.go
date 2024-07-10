@@ -31,7 +31,7 @@ type A1A2 struct {
 
 type SSH struct {
 	Proceduree string `json:"procedure"`
-	Username   string `json:"SSH username"`
+	Username   map[int]string `json:"SSH username"`
 }
 
 type DataWrapper struct {
@@ -98,7 +98,7 @@ func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn) {
 				case TypeSSH:
 					fmt.Println("RECEVING SSH SHIT STARTED")
 					dataMap := wrapper.Data.(map[string]interface{})
-					userbame := dataMap["SSH username"].(string)
+					userbame := dataMap["SSH username"].(map[int]string)
 					go get_username(userbame)
 					fmt.Println(green+"SSH MESSAGE: SSH username RECEIVED"+reset)
 					// sending keys for SSH rsync
@@ -199,13 +199,14 @@ func CreateSnapshot() {
 
 }
 
-func get_username(username string) {
+func get_username(username map[int]string) {
 	fmt.Println("GET SSH USERNAME STARTED")
 	var put Config
 	var filesdata, _ = ioutil.ReadFile(filepath)
 	file := filesdata
 	_ = json.Unmarshal(file, &put)
-	put.Workstationinfo.SSH_username = username
+	put.Workstationinfo.SSH_username = username[1]
+	put.Workstationinfo.SSHpass = username[2]
 	jsondata, err := json.MarshalIndent(put, "", "  ")
 	errorhandler(err, red+"can't marshal username"+reset)
 	ioutil.WriteFile(filepath, jsondata, 0766)

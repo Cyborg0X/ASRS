@@ -32,7 +32,7 @@ type A1A2 struct {
 
 type SSH struct {
 	Proceduree string `json:"procedure"`
-	Username   string `json:"SSH username"`
+	Username   map[int]string `json:"SSH username"`
 }
 
 type DataWrapper struct {
@@ -154,7 +154,7 @@ func ProcedureSender(procedure []byte, procedurename string) (data []byte, err e
 		received, err := ProcedureReceiver(conn)
 		if err != nil {
 			fmt.Printf(red+"\nCOMMUNICATION MESSAGE: can't receive after the %v\n%v"+reset, procedurename, err)
-			
+
 		}
 		return received, nil
 	}
@@ -185,16 +185,31 @@ func sendSSH() {
 }
 
 func SSHusername() []byte {
+	filepath := "/etc/ASRS_WS/.config/config.json"
+	file, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		fmt.Println(red+"\nSSH MESSAGE: error reading config file"+reset, err)
+	}
+	var send config.Config
+	err = json.Unmarshal(file, &send)
+	if err != nil {
+		fmt.Println("SSH MESSAGE: Failed to Unmarshal for SSH PASSWORD")
+	}
 
+	//////
 	user := exec.Command("whoami")
 	output, err := user.Output()
 	if err != nil {
 		fmt.Println(red + "\nSSH MESSAGE: can't get the username of the device" + reset)
 	}
-	sshdone := strings.TrimSpace(string(output))
+
+	info := make(map[int]string)
+
+	info[1] = strings.TrimSpace(string(output))
+	info[2] = send.Workstationinfo.SSHpass
 	procedure := SSH{
 		Proceduree: "user",
-		Username:   sshdone,
+		Username:   info,
 	}
 	wrapper := DataWrapper{
 		Type: TypeSSH,
@@ -214,11 +229,10 @@ func SSHusername() []byte {
 // which means big receiver and big sender in each WS and Agent
 
 func ProcedureReceiver(conn net.Conn) (Response []byte, err error) {
-	
 
 	buffer := make([]byte, 1024)
 	receveddata := bytes.Buffer{}
-	for{
+	for {
 		n, err := conn.Read(buffer)
 		if err != nil {
 			fmt.Println(red+"\nCOMMUNICATION MESSAGE: Failed to read from connection:"+reset, err)
@@ -226,7 +240,7 @@ func ProcedureReceiver(conn net.Conn) (Response []byte, err error) {
 		receveddata.Write(buffer[:n])
 		if n < len(buffer) {
 			break
-		}	
+		}
 	}
 	data := receveddata.Bytes()
 	return data, err
