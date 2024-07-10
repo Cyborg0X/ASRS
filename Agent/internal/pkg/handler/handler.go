@@ -17,7 +17,6 @@ var reset = "\033[0m"
 var k int
 var filepath = "/etc/ASRS_agent/.config/config.json"
 
-
 type DataType int
 
 const (
@@ -31,7 +30,8 @@ type A1A2 struct {
 
 type SSH struct {
 	Proceduree string `json:"procedure"`
-	Username   []string `json:"SSH username"`
+	Username   string `json:"SSH username"`
+	Pass       string `json:"SSH pass"`
 }
 
 type DataWrapper struct {
@@ -72,7 +72,7 @@ func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn) {
 				message := make([]byte, 1024)
 				n, err := conneceted.Read(message)
 				if err != nil {
-					fmt.Println(red + "Failed to read from connection:" + reset, err)
+					fmt.Println(red+"Failed to read from connection:"+reset, err)
 					break
 				}
 				defer conneceted.Close()
@@ -81,26 +81,27 @@ func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn) {
 				k = k + 1
 
 				err = json.Unmarshal(message[:n], &wrapper)
-				errorhandler(err, red + "can't unmarshal received message" + reset)
+				errorhandler(err, red+"can't unmarshal received message"+reset)
 				//dataStr := fmt.Sprintf("%v", wrapper.Data)
 				//fmt.Println(wrapper.Data)
 				switch wrapper.Type {
 				case Typemessage:
 					dataMap := wrapper.Data.(map[string]interface{})
 					if dataMap["procedure"] == "A1" {
-						fmt.Println( green+"PROCEDURE MESSAGE: A1 RECEIVED"+reset)
+						fmt.Println(green + "PROCEDURE MESSAGE: A1 RECEIVED" + reset)
 						go Get_Status()
 
 					} else if dataMap["procedure"] == "A2" {
-						fmt.Println(green+"PROCEDURE MESSAGE: A2 RECEIVED"+reset)
+						fmt.Println(green + "PROCEDURE MESSAGE: A2 RECEIVED" + reset)
 						go Heal_now()
 					}
 				case TypeSSH:
 					fmt.Println("RECEVING SSH SHIT STARTED")
 					dataMap := wrapper.Data.(map[string]interface{})
-					userbame := dataMap["Username"].([]string)
-					go get_username(userbame)
-					fmt.Println(green+"SSH MESSAGE: SSH username RECEIVED"+reset)
+					userbame := dataMap["SSH username"].(string)
+					pass := dataMap["SSH pass"].(string)
+					go get_username(userbame, pass)
+					fmt.Println(green + "SSH MESSAGE: SSH username RECEIVED" + reset)
 					// sending keys for SSH rsync
 					keys := SSH_config()
 					conneceted.Write(keys)
@@ -144,14 +145,14 @@ func CreateSnapshot() {
 		checker.Backup.FullSnapshot = true
 		done, err := json.MarshalIndent(checker, "", "  ")
 		if err != nil {
-			fmt.Println(red+"SNAPPER MESSAGE: Failed to write to snapshot checker"+reset)
+			fmt.Println(red + "SNAPPER MESSAGE: Failed to write to snapshot checker" + reset)
 		}
 		ioutil.WriteFile(filepath, done, 0766)
 
 		FULL := exec.Command("sudo", "snapper", "-c", asrs_conf, "create", "-t", "pre", "-d", "BASELINE SNAPSHOT")
 		output_full, err := FULL.CombinedOutput()
 		if err != nil {
-			fmt.Println(red+"SNAPPER MESSAGE: Failed to get output of pre snaphsot creation"+reset)
+			fmt.Println(red + "SNAPPER MESSAGE: Failed to get output of pre snaphsot creation" + reset)
 		}
 		fmt.Println(string(output_full))
 
@@ -176,7 +177,7 @@ func CreateSnapshot() {
 		checker.Detectionmarker.Markerisdetected = false
 		done, err := json.MarshalIndent(checker, "", "  ")
 		if err != nil {
-			fmt.Println(red+"SNAPPER MESSAGE: Failed to write new snapshot number"+reset)
+			fmt.Println(red + "SNAPPER MESSAGE: Failed to write new snapshot number" + reset)
 		}
 		ioutil.WriteFile(filepath, done, 0766)
 		remotepath := "/etc/ASRS_WS/.database/snapshots_backup"
@@ -190,28 +191,25 @@ func CreateSnapshot() {
 
 	}
 	//for loop, wait for 1 hour, set detection marker, take snapshot, remove detection marker
-	// to list snapshots of config >>> sudo snapper -c ASRS_CONF list 
-	
-	// to set new default config >>>  
+	// to list snapshots of config >>> sudo snapper -c ASRS_CONF list
 
-
-
+	// to set new default config >>>
 
 }
 
-func get_username(username []string) {
+func get_username(username string, pass string) {
 	fmt.Println("GET SSH USERNAME STARTED")
 	var put Config
 	passw := "/etc/ASRS_agent/.config/pass.txt"
 	var filesdata, _ = ioutil.ReadFile(filepath)
 	file := filesdata
 	_ = json.Unmarshal(file, &put)
-	put.Workstationinfo.SSH_username = username[1]
-	put.Workstationinfo.SSHpass = username[2]
+	put.Workstationinfo.SSH_username = username
+	put.Workstationinfo.SSHpass = username
 	jsondata, err := json.MarshalIndent(put, "", "  ")
 	errorhandler(err, red+"can't marshal username"+reset)
 	ioutil.WriteFile(filepath, jsondata, 0766)
-	ioutil.WriteFile(passw, []byte(username[2]), 0766)
+	ioutil.WriteFile(passw, []byte(pass), 0766)
 }
 
 func SSHkeys() {
@@ -230,7 +228,7 @@ func Local_actions(wg *sync.WaitGroup) {
 		for {
 			time.Sleep(time.Minute * 2)
 			CreateSnapshot()
-			
+
 		}
 	}()
 	go func() {
@@ -258,7 +256,7 @@ func Sync_web_files() {
 		"/var/lib/mysql/",
 		"/var/lib/pgsql/",
 	}
-	pass:= "--password-file=/etc/ASRS_agent/.config/pass.txt"
+	pass := "--password-file=/etc/ASRS_agent/.config/pass.txt"
 	var WSdir = []string{
 		"/etc/ASRS_WS/.database/database_backup",
 		"/etc/ASRS_WS/.database/website_backup",
@@ -271,7 +269,7 @@ func Sync_web_files() {
 			if i == 0 {
 				for _, back := range website {
 
-					cmd := exec.Command("sudo", "rsync", "-av", "--delete",pass, back, dest)
+					cmd := exec.Command("sudo", "rsync", "-av", "--delete", pass, back, dest)
 					outpit, err := cmd.CombinedOutput()
 					errorhandler(err, red+"RSYNC MESSAGE: Faild to sync webiste files to remote directory"+reset)
 					fmt.Println(string(outpit))
