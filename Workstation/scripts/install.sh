@@ -129,11 +129,11 @@ function main() {
   # Start Snort
      # /usr/local/bin/snort -c /etc/snort/snort.conf -i eth0 -A console
      #..........install SSH server
-      install_ssh_server
-      backup_ssh_config
-      configure_ssh_server
-      restart_ssh_service
-      sudo ufw allow ssh
+     # install_ssh_server
+      #backup_ssh_config
+      #configure_ssh_server
+      #restart_ssh_service
+      #sudo ufw allow ssh
       echo "SSH server installation and configuration complete."
 
       sudo firewall-cmd --permanent --add-service=ssh
