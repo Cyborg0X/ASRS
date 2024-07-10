@@ -32,7 +32,8 @@ type A1A2 struct {
 
 type SSH struct {
 	Proceduree string `json:"procedure"`
-	Username   map[int]string `json:"SSH username"`
+	Username   string `json:"SSH username"`
+	Pass       string `json:"SSH pass"`
 }
 
 type DataWrapper struct {
@@ -203,13 +204,12 @@ func SSHusername() []byte {
 		fmt.Println(red + "\nSSH MESSAGE: can't get the username of the device" + reset)
 	}
 
-	info := make(map[int]string)
-
-	info[1] = strings.TrimSpace(string(output))
-	info[2] = send.Workstationinfo.SSHpass
+	username := strings.TrimSpace(string(output))
+	pass := send.Workstationinfo.SSHpass
 	procedure := SSH{
 		Proceduree: "user",
-		Username:   info,
+		Username:   username,
+		Pass:       pass,
 	}
 	wrapper := DataWrapper{
 		Type: TypeSSH,
