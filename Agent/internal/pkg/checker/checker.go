@@ -39,7 +39,7 @@ func Depcheck() bool {
 		if err != nil {
 			checklist[packages[i]] = "NOT installed"
 			//fmt.Printf("installing %v..... please wait\n", packages[i])
-			install.Run()
+			//install.Run()
 
 		} else if strings.Contains(outputstr, "Status: install ok installed") {
 
