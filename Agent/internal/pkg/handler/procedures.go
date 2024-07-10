@@ -15,6 +15,7 @@ func Get_Status() {
 
 func Restore_Backup(done chan bool) {
 	<-done
+	
 	fmt.Println("restore backup done")
 	done <- true
 }
