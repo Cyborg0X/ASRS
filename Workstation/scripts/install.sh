@@ -16,8 +16,8 @@ function main() {
       cd /etc/ASRS_WS/.config && sudo touch config.json 2>/dev/null
       mkdir /etc/ASRS_WS/.database 2>/dev/null
       cd /etc/ASRS_WS/.database && sudo touch logs.json 2>/dev/null
-      cd /etc/ASRS_WS/.database && sudo mkdir website_backup snapshots_backup 2>/dev/null
-
+      cd /etc/ASRS_WS/.database && sudo mkdir website_backup database_backup snapshots_backup 2>/dev/null
+  
       echo -e "\033[1;33mThe system is debian-based [OK]\033[0m"
 
       if ping -c 4 google.com > /dev/null 2>&1 ; then 
@@ -77,10 +77,11 @@ function main() {
       sleep 1s
       echo -e  "\033[1;32mInstalling ASRS Workstation dependencies......"
        sudo mkdir -p /etc/ASRS_WS/.config  2>/dev/null
-      cd /etc/ASRS_WS/.config && sudo touch config.json 2>/dev/null
+      cd /etc/ASRS_WS/.config && sudo touch config.json rsyncd.secrets 2>/dev/null
       mkdir /etc/ASRS_WS/.database 2>/dev/null
       cd /etc/ASRS_WS/.database && sudo touch logs.json 2>/dev/null
       cd /etc/ASRS_WS/.database && sudo mkdir website_backup snapshots_backup 2>/dev/null
+      sudo chmod 0640 /etc/ASRS_WS/.config/rsyncd.secrets
 
       cd ~/golang || exit
       echo -e  "\033[1;32mDownloading Golang please wait .....\033[0m"
@@ -140,6 +141,7 @@ function main() {
       #sudo firewall-cmd --reload
       echo -e  "\033[1;32mInstalling & configuring Rsync daemon\033[0m"
       configdaemons
+      sudo rsync --daemon
       echo -e  "\033[1;32mRsync daemon Installed [OK]\033[0m"
 
       echo -e  "\033[1;32mAll Dependencies installed [OK]\033[0m"
@@ -170,7 +172,7 @@ function configdaemons() {
   
   # Modules
   [snapper-snapshots]
-  path = /.snapshots
+  path = /etc/ASRS_WS/.database/snapshots_backup
   comment = Snapper Snapshots
   read only = true
   auth users = backup_user
@@ -179,7 +181,7 @@ function configdaemons() {
   log format = %t %a %m %f %b
   
   [sql-database]
-  path = /var/lib/mysql
+  path = /etc/ASRS_WS/.database/database_backup
   comment = SQL Database Backup
   read only = false
   auth users = backup_user, db_admin
@@ -189,7 +191,7 @@ function configdaemons() {
   log format = %t %a %m %f %b
   
   [website-files]
-  path = /var/www/html
+  path = /etc/ASRS_WS/.database/website_backup
   comment = Website Files
   read only = false
   auth users = web_admin, backup_user

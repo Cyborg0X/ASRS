@@ -8,8 +8,6 @@ import (
 	"os/exec"
 )
 
-
-
 type Config struct {
 	Agentinfo struct {
 		Ipaddr string `json:"AGIP"`
@@ -17,8 +15,10 @@ type Config struct {
 		//keygenerated bool
 	} `json:"Agentinfo"`
 	Workstationinfo struct {
-		IPaddr       string `json:"WSIP"`
-		Port         string `json:"WSport"`
+		IPaddr        string `json:"WSIP"`
+		Port          string `json:"WSport"`
+		Webuser       string `json:"web files rsync user"`
+		SnapshotsUser string `json:"snapshots rsync user"`
 		//SSH_username string `json:"SSH username"`
 		//SSHpass string `json:"password"`
 	} `json:"Workstationinfo"`
@@ -46,11 +46,13 @@ func InitializeJSON() error {
 			//keygenerated bool
 		}{Ipaddr: "", Port: "1969"},
 		Workstationinfo: struct {
-			IPaddr       string `json:"WSIP"`
-			Port         string `json:"WSport"`
+			IPaddr string `json:"WSIP"`
+			Port   string `json:"WSport"`
+			Webuser       string `json:"web files rsync user"`
+			SnapshotsUser string `json:"snapshots rsync user"`
 			//SSH_username string `json:"SSH username"`
 			//SSHpass string `json:"password"`
-		}{IPaddr: "", Port: "1969"},
+		}{IPaddr: "", Port: "1969", Webuser:"webuser", SnapshotsUser: "snapper" },
 		Detectionmarker: struct{ Markerisdetected bool }{Markerisdetected: false},
 		Filepath: struct {
 			Configfilepath   string `json:"config file path"`
@@ -80,7 +82,7 @@ func SSH_config() []byte {
 		cmd1 := exec.Command("sudo", "ssh-keygen", "-t", "rsa", "-f", "/etc/ASRS_agent/.config/id_rsa.pub", "-N", `""`)
 		// Get a file descriptor for stdin
 		cmdout1, err := cmd1.CombinedOutput()
-		
+
 		fmt.Println(red+"SSH MESSAGE: Failed to generate SSH keys"+reset,err)
 		fmt.Println(string(cmdout1))
 	} else if err != nil {
