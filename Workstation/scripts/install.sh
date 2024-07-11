@@ -198,7 +198,7 @@ function configdaemons() {
   transfer logging = yes
   log format = %t %a %m %f %b"
 
-  conf > /etc/rsyncd.conf
+  echo "$conf" > /etc/rsyncd.conf
 }
 
 
