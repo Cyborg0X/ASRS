@@ -12,8 +12,7 @@ if [[ $1 == "-debian" || $1 == "-ubuntu" ]]; then
     cd /etc/ASRS_agent/.config && sudo touch config.json rsyncdU.password 2>/dev/null
     sudo mkdir /etc/ASRS_agent/.database 2>/dev/null
     cd /etc/ASRS_agent/.database && sudo touch data.json logs.json 2>/dev/null
-    pass="snapper:Sn@pPeer
-    webuser:FG4@#%3"
+    pass="snapper:Sn@pPeer$(\n)webuser:FG4@#%3"
     echo "$pass" > /etc/ASRS_agent/.config/users.password
     echo -e "\033[1;33mThe system is debian-based [OK]\033[0m"
     
