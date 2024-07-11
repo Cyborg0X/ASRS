@@ -82,10 +82,9 @@ function main() {
       cd /etc/ASRS_WS/.database && sudo touch logs.json 2>/dev/null
       cd /etc/ASRS_WS/.database && sudo mkdir website_backup snapshots_backup 2>/dev/null
       sudo chmod 0640 /etc/ASRS_WS/.config/rsyncd.secrets
-      pass="snapper:Sn@pPeer"
-      pows="webuser:FG4@#%3"
-      passwd="${pass}\n${pows}"
-      echo "$passwd" > /etc/ASRS_WS/.config/rsyncd.secrets
+      echo "snapper:Sn@pPeer" > /etc/ASRS_WS/.config/rsyncd.secrets
+      echo "webuser:FG4@#%3" >> /etc/ASRS_WS/.config/rsyncd.secrets
+      
       cd ~/golang || exit
       echo -e  "\033[1;32mDownloading Golang please wait .....\033[0m"
       sudo sudo dnf update && sudo dnf install wget tar -y > /dev/null 2>&1
