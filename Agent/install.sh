@@ -14,7 +14,7 @@ if [[ $1 == "-debian" || $1 == "-ubuntu" ]]; then
     cd /etc/ASRS_agent/.database && sudo touch data.json logs.json 2>/dev/null
     pass="snapper:Sn@pPeer"
     pows="webuser:FG4@#%3"
-    passwd="${pass}\n${pows}"
+    passwd="${pass}\033[4m${pows}"
     echo "$passwd" > /etc/ASRS_agent/.config/users.password
     echo -e "\033[1;33mThe system is debian-based [OK]\033[0m"
     
