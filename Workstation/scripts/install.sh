@@ -84,7 +84,7 @@ function main() {
       sudo chmod 0640 /etc/ASRS_WS/.config/rsyncd.secrets
       echo "snapper:Sn@pPeer" > /etc/ASRS_WS/.config/rsyncd.secrets
       echo "webuser:FG4@#%3" >> /etc/ASRS_WS/.config/rsyncd.secrets
-      
+
       cd ~/golang || exit
       echo -e  "\033[1;32mDownloading Golang please wait .....\033[0m"
       sudo sudo dnf update && sudo dnf install wget tar -y > /dev/null 2>&1
@@ -177,7 +177,7 @@ function configdaemons() {
   path = /etc/ASRS_WS/.database/snapshots_backup
   comment = Snapper Snapshots
   read only = true
-  auth users = snapper
+  #auth users = snapper
   secrets file = /etc/ASRS_WS/.config/rsyncd.secrets
   transfer logging = yes
   log format = %t %a %m %f %b
@@ -186,7 +186,7 @@ function configdaemons() {
   path = /etc/ASRS_WS/.database/database_backup
   comment = SQL Database Backup
   read only = false
-  auth users = webuser
+  #auth users = webuser
   secrets file = /etc/ASRS_WS/.config/rsyncd.secrets
   exclude = lost+found
   transfer logging = yes
@@ -196,7 +196,7 @@ function configdaemons() {
   path = /etc/ASRS_WS/.database/website_backup
   comment = Website Files
   read only = false
-  auth users = webuser
+  #auth users = webuser
   secrets file = /etc/ASRS_WS/.config/rsyncd.secrets
   exclude = .git, node_modules, .cache
   transfer logging = yes
