@@ -177,7 +177,7 @@ func CreateSnapshot() {
 		fmt.Println(string(output)) // log it later ALSO set JSON OUTPUT FORMAT IN SNAPPER
 		//pass := "--password-file=/etc/ASRS_agent/.config/pass.txt"
 		rsynco := exec.Command("sudo", "rsync", "-av", "--delete", "/.snapshots", remote)
-		routput, err := rsynco.Output()
+		routput, err := rsynco.CombinedOutput()
 		errorhandler(err, red+"SNAPPER MESSAGE: Faild to sync snapshots"+reset)
 		fmt.Println(string(routput))
 		time.Sleep(time.Minute * 2)
