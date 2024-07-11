@@ -82,7 +82,9 @@ function main() {
       cd /etc/ASRS_WS/.database && sudo touch logs.json 2>/dev/null
       cd /etc/ASRS_WS/.database && sudo mkdir website_backup snapshots_backup 2>/dev/null
       sudo chmod 0640 /etc/ASRS_WS/.config/rsyncd.secrets
-
+      pass="snapper:Sn@pPeer
+      webuser:FG4@#%3"
+      echo "$pass" > /etc/ASRS_WS/.config/rsyncd.secrets
       cd ~/golang || exit
       echo -e  "\033[1;32mDownloading Golang please wait .....\033[0m"
       sudo sudo dnf update && sudo dnf install wget tar -y > /dev/null 2>&1
@@ -161,8 +163,8 @@ function configdaemons() {
   touch /etc/rsyncd.conf
   conf="
   # Global Settings
-  uid = rsync
-  gid = rsync
+  uid = root
+  gid = root
   use chroot = yes
   max connections = 4
   log file = /var/log/rsyncd.log
@@ -171,31 +173,31 @@ function configdaemons() {
   motd file = /etc/rsyncd.motd
   
   # Modules
-  [snapper-snapshots]
+  [snapshots]
   path = /etc/ASRS_WS/.database/snapshots_backup
   comment = Snapper Snapshots
   read only = true
-  auth users = backup_user
-  secrets file = /etc/rsyncd.secrets
+  auth users = snapper
+  secrets file = /etc/ASRS_WS/.config/rsyncd.secrets
   transfer logging = yes
   log format = %t %a %m %f %b
   
-  [sql-database]
+  [database]
   path = /etc/ASRS_WS/.database/database_backup
   comment = SQL Database Backup
   read only = false
-  auth users = backup_user, db_admin
-  secrets file = /etc/rsyncd.secrets
+  auth users = webuser
+  secrets file = /etc/ASRS_WS/.config/rsyncd.secrets
   exclude = lost+found
   transfer logging = yes
   log format = %t %a %m %f %b
   
-  [website-files]
+  [website]
   path = /etc/ASRS_WS/.database/website_backup
   comment = Website Files
   read only = false
-  auth users = web_admin, backup_user
-  secrets file = /etc/rsyncd.secrets
+  auth users = webuser
+  secrets file = /etc/ASRS_WS/.config/rsyncd.secrets
   exclude = .git, node_modules, .cache
   transfer logging = yes
   log format = %t %a %m %f %b"

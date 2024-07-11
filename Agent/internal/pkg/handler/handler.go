@@ -95,17 +95,6 @@ func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn) {
 						fmt.Println(green + "PROCEDURE MESSAGE: A2 RECEIVED" + reset)
 						go Heal_now()
 					}
-				case TypeSSH:
-					fmt.Println("RECEVING SSH SHIT STARTED")
-					dataMap := wrapper.Data.(map[string]interface{})
-					userbame := dataMap["SSH username"].(string)
-					pass := dataMap["SSH pass"].(string)
-					go get_username(userbame, pass)
-					fmt.Println(green + "SSH MESSAGE: SSH username RECEIVED" + reset)
-					// sending keys for SSH rsync
-					keys := SSH_config()
-					conneceted.Write(keys)
-					conneceted.Close()
 
 				}
 				break

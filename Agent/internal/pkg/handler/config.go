@@ -4,8 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
-	"os/exec"
+
 )
 
 type Config struct {
