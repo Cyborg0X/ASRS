@@ -170,7 +170,7 @@ function configdaemons() {
   
   # Modules
   [snapper-snapshots]
-  path = /var/lib/snapper/snapshots
+  path = /.snapshots
   comment = Snapper Snapshots
   read only = true
   auth users = backup_user
