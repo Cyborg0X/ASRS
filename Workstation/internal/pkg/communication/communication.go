@@ -163,10 +163,10 @@ func AssignAgentIP() error {
 		lookforip.Agentinfo.Ipaddr = strings.TrimSpace(lookforip.Agentinfo.Ipaddr) // Remove trailing newline
 		errorhandler(err, "Error marshaling JSON: ")
 		/////pass 
-		fmt.Printf(cyan+"Enter the SSH pass to give to the Agent: "+reset)
-		buffer = bufio.NewReader(os.Stdin)
-		lookforip.Workstationinfo.SSHpass, _ = buffer.ReadString('\n')
-		lookforip.Workstationinfo.SSHpass = strings.TrimSpace(lookforip.Workstationinfo.SSHpass) // Remove trailing newline
+		//fmt.Printf(cyan+"Enter the SSH pass to give to the Agent: "+reset)
+		//buffer = bufio.NewReader(os.Stdin)
+		//lookforip.Workstationinfo.SSHpass, _ = buffer.ReadString('\n')
+		//lookforip.Workstationinfo.SSHpass = strings.TrimSpace(lookforip.Workstationinfo.SSHpass) // Remove trailing newline
 		modifiedData, err := json.MarshalIndent(lookforip, "", "  ")
 		errorhandler(err, "Error marshaling JSON: ")
 		/////

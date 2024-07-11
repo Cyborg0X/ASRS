@@ -4,15 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net"
-	"os/exec"
-	"strings"
-	"sync"
-	"time"
-
 	"github.com/Cyborg0X/ASRS/Workstation/internal/pkg/communication"
 	"github.com/Cyborg0X/ASRS/Workstation/internal/pkg/config"
+	"net"
+	"sync"
+	"time"
 )
 
 var red = "\033[31m"
@@ -43,7 +39,6 @@ type DataWrapper struct {
 
 func TaskHandler(wgd *sync.WaitGroup) {
 	fmt.Println(green + "TASK HANDLER RUNNING NOW" + reset)
-	sendSSH()
 	defer wgd.Done()
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -114,21 +109,24 @@ func procedureSelector(procedurename string) {
 			return
 		}
 
-	case "user":
-		username := SSHusername()
-		fmt.Println(string(username))
-		receiveddata, err := ProcedureSender(username, procedurename)
-		SaveKeys(receiveddata)
-		if err != nil {
-			fmt.Println(red+"\nSSH MESSAGE: Failed to send SSH username to Agent:"+reset, err)
-			return
-		}
-		fmt.Println(green + "\nSSH MESSAGE: SSH username sent successfully" + reset)
+		/*
+			case "user":
+				username := SSHusername()
+				fmt.Println(string(username))
+				receiveddata, err := ProcedureSender(username, procedurename)
+				SaveKeys(receiveddata)
+				if err != nil {
+					fmt.Println(red+"\nSSH MESSAGE: Failed to send SSH username to Agent:"+reset, err)
+					return
+				}
+				fmt.Println(green + "\nSSH MESSAGE: SSH username sent successfully" + reset)
 
+
+		*/
 	}
-
 }
 
+/*
 func SaveKeys(received []byte) {
 	keyspath := "/root/.ssh/authorized_keys"
 	err := ioutil.WriteFile(keyspath, received, 0766)
@@ -136,6 +134,7 @@ func SaveKeys(received []byte) {
 		fmt.Println(red+"\nSSH MESSAGE: Failed to write SSH keys:"+reset, err)
 	}
 }
+*/
 
 func ProcedureSender(procedure []byte, procedurename string) (data []byte, err error) {
 
@@ -163,6 +162,7 @@ func ProcedureSender(procedure []byte, procedurename string) (data []byte, err e
 	return
 }
 
+/*
 func sendSSH() {
 
 	filepath := "/etc/ASRS_WS/.config/config.json"
@@ -184,6 +184,7 @@ func sendSSH() {
 		fmt.Println(green + "\nSSH MESSAGE: SSH has been newly configured in the config file" + reset)
 	}
 }
+
 
 func SSHusername() []byte {
 	filepath := "/etc/ASRS_WS/.config/config.json"
@@ -222,6 +223,7 @@ func SSHusername() []byte {
 	return jsondata
 
 }
+*/
 
 // sent procedure in connection
 // receive response in another connection

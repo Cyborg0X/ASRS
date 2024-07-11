@@ -1,8 +1,8 @@
 #!/bin/bash
 
    # Define some variables
-SSH_CONFIG_FILE="/etc/ssh/sshd_config"
-BACKUP_FILE="/etc/ssh/sshd_config.bak"
+#SSH_CONFIG_FILE="/etc/ssh/sshd_config"
+#BACKUP_FILE="/etc/ssh/sshd_config.bak"
 function main() {
     if [ -z "$1" ];then
       printf "\033[1;32mUsage: ./install.sh [options] command\nplease choose your OS:\n -debian\n -ubuntu\n -fedora\n\033[0m"
@@ -174,16 +174,16 @@ function configdaemons() {
   
   # Modules
   [snapshots]
-  path = /etc/ASRS_WS/.database/snapshots_backup
+  path = /etc/ASRS_WS/.database/snapshots_backup/
   comment = Snapper Snapshots
-  read only = true
+  read only = false
   #auth users = snapper
   secrets file = /etc/ASRS_WS/.config/rsyncd.secrets
   transfer logging = yes
   log format = %t %a %m %f %b
   
   [database]
-  path = /etc/ASRS_WS/.database/database_backup
+  path = /etc/ASRS_WS/.database/database_backup/
   comment = SQL Database Backup
   read only = false
   #auth users = webuser
@@ -193,7 +193,7 @@ function configdaemons() {
   log format = %t %a %m %f %b
   
   [website]
-  path = /etc/ASRS_WS/.database/website_backup
+  path = /etc/ASRS_WS/.database/website_backup/
   comment = Website Files
   read only = false
   #auth users = webuser
@@ -208,6 +208,7 @@ function configdaemons() {
 
 
 
+# shellcheck disable=SC2188
 <<'END'
 
 # Function to install ssh server

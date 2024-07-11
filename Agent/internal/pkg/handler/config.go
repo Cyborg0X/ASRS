@@ -97,7 +97,7 @@ func SSH_config() []byte {
 }
 */
 // create info parser for whole infos
-
+/*
 func configparser() *Config {
 	filedata, err := ioutil.ReadFile("/etc/ASRS_agent/.config/config.json")
 	if err != nil {
@@ -112,6 +112,7 @@ func configparser() *Config {
 	return &config
 
 }
+*/
 
 func WSInfoParser() (ip, port string) {
 	filedata, err := ioutil.ReadFile("/etc/ASRS_agent/.config/config.json")

@@ -90,14 +90,15 @@ func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn) {
 					if dataMap["procedure"] == "A1" {
 						fmt.Println(green + "PROCEDURE MESSAGE: A1 RECEIVED" + reset)
 						go Get_Status()
-
+						break
 					} else if dataMap["procedure"] == "A2" {
 						fmt.Println(green + "PROCEDURE MESSAGE: A2 RECEIVED" + reset)
 						go Heal_now()
+						break
 					}
 
 				}
-				break
+				
 			}
 
 		}
@@ -169,11 +170,12 @@ func CreateSnapshot() {
 			fmt.Println(red + "SNAPPER MESSAGE: Failed to write new snapshot number" + reset)
 		}
 		ioutil.WriteFile(filepath, done, 0766)
-		remotepath := "/etc/ASRS_WS/.database/snapshots_backup"
-		remote := fmt.Sprintf("%v@ %v:%v", checker.Workstationinfo.SSH_username, checker.Workstationinfo.IPaddr, remotepath)
+		//remotepath := "/etc/ASRS_WS/.database/snapshots_backup/"
+		module := "snapshots"
+		remote := fmt.Sprintf("%v@ %v::%v", checker.Workstationinfo.SnapshotsUser, checker.Workstationinfo.IPaddr, module)
 		fmt.Println(string(output)) // log it later ALSO set JSON OUTPUT FORMAT IN SNAPPER
-		pass := "--password-file=/etc/ASRS_agent/.config/pass.txt"
-		rsynco := exec.Command("sudo", "rsync", "-av", "--delete", "/.snapshots", remote, pass)
+		//pass := "--password-file=/etc/ASRS_agent/.config/pass.txt"
+		rsynco := exec.Command("sudo", "rsync", "-av", "--delete", "/.snapshots", remote)
 		routput, err := rsynco.Output()
 		errorhandler(err, red+"SNAPPER MESSAGE: Faild to sync snapshots"+reset)
 		fmt.Println(string(routput))
@@ -216,14 +218,14 @@ func Local_actions(wg *sync.WaitGroup) {
 	defer wg.Done()
 	go func() {
 		for {
-			time.Sleep(time.Minute * 2)
+			time.Sleep(time.Second *15)
 			CreateSnapshot()
 
 		}
 	}()
 	go func() {
 		for {
-			time.Sleep(time.Second * 15)
+			time.Sleep(time.Second * 20)
 			Sync_web_files()
 		}
 
@@ -235,6 +237,8 @@ func Sync_web_files() {
 	fmt.Println("SYNC WEB FILES STARTED")
 	// for loop and wait for sync file and log it
 	var conf Config
+	databaseMOD := "database"
+	websiteMOD := "website"
 	filedata, _ := ioutil.ReadFile(filepath)
 	err := json.Unmarshal(filedata, &conf)
 	errorhandler(err, red+"SYNC WEB FILES MESSAGE: Failed to unmarshal config"+reset)
@@ -246,28 +250,24 @@ func Sync_web_files() {
 		"/var/lib/mysql/",
 		"/var/lib/pgsql/",
 	}
-	pass := "--password-file=/etc/ASRS_agent/.config/pass.txt"
-	var WSdir = []string{
-		"/etc/ASRS_WS/.database/database_backup",
-		"/etc/ASRS_WS/.database/website_backup",
-	}
-	go func() {
-		for i, dir := range WSdir {
 
-			dest := fmt.Sprintf("%v@%v:%v", "rsync://",conf.Workstationinfo.IPaddr, dir)
-			fmt.Println(dest)
+	//pass := "--password-file=/etc/ASRS_agent/.config/pass.txt"
+
+	go func() {
+		for i := 0; i < 2; i++ {
+
 			if i == 0 {
 				for _, back := range website {
-
-					cmd := exec.Command("sudo", "rsync", "-av", "--delete", back, dest, pass)
+					remote := fmt.Sprintf("%v@%v::%v", conf.Workstationinfo.Webuser, conf.Workstationinfo.IPaddr, websiteMOD)
+					cmd := exec.Command("sudo", "rsync", "-av", "--delete", back, remote)
 					outpit, err := cmd.CombinedOutput()
 					errorhandler(err, red+"RSYNC MESSAGE: Faild to sync webiste files to remote directory"+reset)
 					fmt.Println(string(outpit))
 				}
 			} else if i == 1 {
 				for _, back := range database {
-
-					cmd := exec.Command("sudo", "rsync", "-av", "--delete", back, dest)
+					remote := fmt.Sprintf("%v@%v::%v", conf.Workstationinfo.Webuser, conf.Workstationinfo.IPaddr, databaseMOD)
+					cmd := exec.Command("sudo", "rsync", "-av", "--delete", back, remote)
 					outpit, err := cmd.CombinedOutput()
 					errorhandler(err, red+"RSYNC MESSAGE: Faild to sync database files to remote directory"+reset)
 					fmt.Println(string(outpit))

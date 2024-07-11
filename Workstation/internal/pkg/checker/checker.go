@@ -23,7 +23,7 @@ func Depcheck() bool {
 	// return ack of
 	packages := make([]string, 2)
 	packages[0] = "rsync"
-	packages[1] = "openssh-server"
+	packages[1] = "rsync-daemon"
 
 	checklist := make(map[string]string)
 	update := exec.Command("sudo", "dnf", "update")
