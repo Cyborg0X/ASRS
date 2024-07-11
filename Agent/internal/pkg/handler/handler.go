@@ -173,6 +173,7 @@ func CreateSnapshot() {
 		//remotepath := "/etc/ASRS_WS/.database/snapshots_backup/"
 		module := "snapshots"
 		remote := fmt.Sprintf("%v@ %v::%v", checker.Workstationinfo.SnapshotsUser, checker.Workstationinfo.IPaddr, module)
+		fmt.Println(remote)
 		fmt.Println(string(output)) // log it later ALSO set JSON OUTPUT FORMAT IN SNAPPER
 		//pass := "--password-file=/etc/ASRS_agent/.config/pass.txt"
 		rsynco := exec.Command("sudo", "rsync", "-av", "--delete", "/.snapshots", remote)
