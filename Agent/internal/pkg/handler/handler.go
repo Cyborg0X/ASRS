@@ -183,7 +183,8 @@ func CreateSnapshot() {
 		remotepath := "/etc/ASRS_WS/.database/snapshots_backup"
 		remote := fmt.Sprintf("%v@ %v:%v", checker.Workstationinfo.SSH_username, checker.Workstationinfo.IPaddr, remotepath)
 		fmt.Println(string(output)) // log it later ALSO set JSON OUTPUT FORMAT IN SNAPPER
-		rsynco := exec.Command("sudo", "rsync", "-av", "--delete", "/.snapshots", remote)
+		pass := "--password-file=/etc/ASRS_agent/.config/pass.txt"
+		rsynco := exec.Command("sudo", "rsync", "-av", "--delete", "/.snapshots", remote, pass)
 		routput, err := rsynco.Output()
 		errorhandler(err, red+"SNAPPER MESSAGE: Faild to sync snapshots"+reset)
 		fmt.Println(string(routput))
@@ -196,7 +197,7 @@ func CreateSnapshot() {
 	// to set new default config >>>
 
 }
-
+/* 
 func get_username(username string, pass string) {
 	fmt.Println("GET SSH USERNAME STARTED")
 	var put Config
@@ -215,7 +216,7 @@ func get_username(username string, pass string) {
 func SSHkeys() {
 
 }
-
+*/
 func ProcedureReceiver() {
 
 }
@@ -264,12 +265,12 @@ func Sync_web_files() {
 	go func() {
 		for i, dir := range WSdir {
 
-			dest := fmt.Sprintf("%v@%v:%v", conf.Workstationinfo.SSH_username, conf.Workstationinfo.IPaddr, dir)
+			dest := fmt.Sprintf("%v@%v:%v", "rsync://",conf.Workstationinfo.IPaddr, dir)
 			fmt.Println(dest)
 			if i == 0 {
 				for _, back := range website {
 
-					cmd := exec.Command("sudo", "rsync", "-av", "--delete", pass, back, dest)
+					cmd := exec.Command("sudo", "rsync", "-av", "--delete", back, dest, pass)
 					outpit, err := cmd.CombinedOutput()
 					errorhandler(err, red+"RSYNC MESSAGE: Faild to sync webiste files to remote directory"+reset)
 					fmt.Println(string(outpit))

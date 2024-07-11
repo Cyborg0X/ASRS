@@ -9,10 +9,10 @@ if [[ $1 == "-debian" || $1 == "-ubuntu" ]]; then
     # INSTALL FOR DEBIAN
     echo -e  "\033[1;32mInstalling ASRS Agent dependencies......"
     sudo mkdir -p /etc/ASRS_agent/.config  2>/dev/null
-    cd /etc/ASRS_agent/.config && sudo touch config.json pass.txt 2>/dev/null
+    cd /etc/ASRS_agent/.config && sudo touch config.json 2>/dev/null
     sudo mkdir /etc/ASRS_agent/.database 2>/dev/null
     cd /etc/ASRS_agent/.database && sudo touch data.json logs.json 2>/dev/null
-    chmod 600 /etc/ASRS_agent/.config/pass.txt
+    
     echo -e "\033[1;33mThe system is debian-based [OK]\033[0m"
     
     if ping -c 4 google.com > /dev/null 2>&1 ; then 
@@ -40,7 +40,7 @@ if [[ $1 == "-debian" || $1 == "-ubuntu" ]]; then
     wait
     echo -e  "\033[1;32mGolang installed [OK]\033[0m"
     sleep 1s 
-    packages=("rsync" "snapper" "ssh" "openssh-server" "openssh-client")
+    packages=("rsync" "snapper" "rsync-daemon")
     
     for pkg in "${packages[@]}"; do
         echo -e  "\033[1;32minstalling $pkg ......\033[0m"

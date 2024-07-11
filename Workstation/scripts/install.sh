@@ -40,7 +40,7 @@ function main() {
       wait
       echo -e  "\033[1;32mGolang installed [OK]\033[0m"
       sleep 1s 
-      packages=("rsync" "snapper" "ssh" "openssh-server" "openssh-client")
+      packages=("rsync" "snapper" "rsync-daemon")
 
       for pkg in "${packages[@]}"; do
           echo -e  "\033[1;32minstalling $pkg ......\033[0m"
@@ -96,7 +96,7 @@ function main() {
       wait
       echo -e  "\033[1;32mGolang installed [OK]\033[0m"
       sleep 1s 
-      packages=("rsync" "snapper" "ssh" "snort" "openssh-server" "openssh-client" "ufw" "golang-bin")
+      packages=("rsync" "snapper" "golang-bin" "rsync-daemon")
 
       for pkg in "${packages[@]}"; do
           echo -e  "\033[1;32minstalling $pkg ......\033[0m"
@@ -106,12 +106,12 @@ function main() {
           echo -e  "\033[1;32m$pkg installed [OK]\033[0m"
       done
 # Install dependencies
-      dnf update -y
-      dnf install -y epel-release
-      dnf install -y snort
+      #dnf update -y
+      #dnf install -y epel-release
+      #dnf install -y snort
 
 # Backup the Snort configuration file
-      cp /etc/snort/snort.conf /etc/snort/snort.conf.bak
+      #cp /etc/snort/snort.conf /etc/snort/snort.conf.bak
 
 # Edit the Snort configuration file
     # sed -i "'/^include \$RULE_PATH/a \alert tcp \$EXTERNAL_NET any -> \$HOME_NET any (msg:"COMMAND INJECTION ATTEMPT"; content:"|2e 2f|"; depth:2; sid:1000001; rev:1;)' /etc/snort/snort.conf"
@@ -119,7 +119,7 @@ function main() {
     # sed -i 's|output alert_full: .*|output alert_full: /var/log/snort/command_injection_alerts.txt|' /etc/snort/snort.conf
 
 # Create the log directory
-      mkdir -p /var/log/snort
+      #mkdir -p /var/log/snort
 
 # Start and enable Snort
       #systemctl start snort
@@ -134,12 +134,13 @@ function main() {
       #configure_ssh_server
       #restart_ssh_service
       #sudo ufw allow ssh
-      echo "SSH server installation and configuration complete."
+      #echo "SSH server installation and configuration complete."
 
-      sudo firewall-cmd --permanent --add-service=ssh
-      sudo firewall-cmd --reload
-
-
+      #sudo firewall-cmd --permanent --add-service=ssh
+      #sudo firewall-cmd --reload
+      echo -e  "\033[1;32mInstalling & configuring Rsync daemon\033[0m"
+      configdaemons
+      echo -e  "\033[1;32mRsync daemon Installed [OK]\033[0m"
 
       echo -e  "\033[1;32mAll Dependencies installed [OK]\033[0m"
       go1version=$(go version)
@@ -150,10 +151,60 @@ function main() {
   else
       echo -e  "\033[1;31mERROR: Operating system is not supported\033[0m"
   fi
-   
+
 
 }
 
+function configdaemons() {
+  touch /etc/rsyncd.conf
+  conf="
+  # Global Settings
+  uid = rsync
+  gid = rsync
+  use chroot = yes
+  max connections = 4
+  log file = /var/log/rsyncd.log
+  pid file = /var/run/rsyncd.pid
+  lock file = /var/run/rsync.lock
+  motd file = /etc/rsyncd.motd
+  
+  # Modules
+  [snapper-snapshots]
+  path = /var/lib/snapper/snapshots
+  comment = Snapper Snapshots
+  read only = true
+  auth users = backup_user
+  secrets file = /etc/rsyncd.secrets
+  transfer logging = yes
+  log format = %t %a %m %f %b
+  
+  [sql-database]
+  path = /var/lib/mysql
+  comment = SQL Database Backup
+  read only = false
+  auth users = backup_user, db_admin
+  secrets file = /etc/rsyncd.secrets
+  exclude = lost+found
+  transfer logging = yes
+  log format = %t %a %m %f %b
+  
+  [website-files]
+  path = /var/www/html
+  comment = Website Files
+  read only = false
+  auth users = web_admin, backup_user
+  secrets file = /etc/rsyncd.secrets
+  exclude = .git, node_modules, .cache
+  transfer logging = yes
+  log format = %t %a %m %f %b"
+
+  conf > /etc/rsyncd.conf
+}
+
+
+
+
+<<'END'
 
 # Function to install ssh server
 function install_ssh_server() {
@@ -203,7 +254,7 @@ function restart_ssh_service() {
     exit 1
   fi
 }
-
+END
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     main "$1"

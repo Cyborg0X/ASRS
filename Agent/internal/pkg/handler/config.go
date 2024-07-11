@@ -14,13 +14,13 @@ type Config struct {
 	Agentinfo struct {
 		Ipaddr string `json:"AGIP"`
 		Port   string `json:"AGport"`
-		keygenerated bool
+		//keygenerated bool
 	} `json:"Agentinfo"`
 	Workstationinfo struct {
 		IPaddr       string `json:"WSIP"`
 		Port         string `json:"WSport"`
-		SSH_username string `json:"SSH username"`
-		SSHpass string `json:"password"`
+		//SSH_username string `json:"SSH username"`
+		//SSHpass string `json:"password"`
 	} `json:"Workstationinfo"`
 
 	Detectionmarker struct {
@@ -43,14 +43,14 @@ func InitializeJSON() error {
 		Agentinfo: struct {
 			Ipaddr string `json:"AGIP"`
 			Port   string `json:"AGport"`
-			keygenerated bool
-		}{Ipaddr: "", Port: "1969", keygenerated: false},
+			//keygenerated bool
+		}{Ipaddr: "", Port: "1969"},
 		Workstationinfo: struct {
 			IPaddr       string `json:"WSIP"`
 			Port         string `json:"WSport"`
-			SSH_username string `json:"SSH username"`
-			SSHpass string `json:"password"`
-		}{IPaddr: "", Port: "1969", SSH_username: "none", SSHpass: "none"},
+			//SSH_username string `json:"SSH username"`
+			//SSHpass string `json:"password"`
+		}{IPaddr: "", Port: "1969"},
 		Detectionmarker: struct{ Markerisdetected bool }{Markerisdetected: false},
 		Filepath: struct {
 			Configfilepath   string `json:"config file path"`
@@ -71,6 +71,7 @@ func InitializeJSON() error {
 	return nil
 }
 
+/*
 func SSH_config() []byte {
 	fmt.Println("SSH CONFIG STARTED")
 
@@ -93,7 +94,7 @@ func SSH_config() []byte {
 	errorhandler(err, red+"SSH MESSAGE: can't read keys file"+reset)
 	return keys
 }
-
+*/
 // create info parser for whole infos
 
 func configparser() *Config {
