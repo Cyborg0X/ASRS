@@ -42,16 +42,18 @@ type DataWrapper struct {
 func TaskHandler(wg *sync.WaitGroup, chanconn chan net.Conn, B3 bool) {
 	fmt.Println("TASK HANDLER STARTED")
 	defer wg.Done()
+	
 	if B3 {
+		wg.Add(1)
 		backchan := make(chan bool)
 		fmt.Println("RESTORE BACKUP STARTED")
 		go Restore_Backup(backchan)
 		<-backchan
 		return
 	}
-
-	wg.Add(1)
+	
 	if !B3 {
+		wg.Add(2)
 		go Local_actions(wg)
 	}
 
@@ -180,7 +182,7 @@ func CreateSnapshot() {
 		routput, err := rsynco.CombinedOutput()
 		errorhandler(err, red+"SNAPPER MESSAGE: Faild to sync snapshots"+reset)
 		fmt.Println(string(routput))
-		time.Sleep(time.Minute * 2)
+		time.Sleep(time.Minute * 4)
 
 	}
 	//for loop, wait for 1 hour, set detection marker, take snapshot, remove detection marker
@@ -216,21 +218,23 @@ func ProcedureReceiver() {
 func Local_actions(wg *sync.WaitGroup) {
 	fmt.Println("LOCAL ACTIONS STARTED")
 	// receive channel from B2 to terminate
+	wg.Add(1)
 	defer wg.Done()
+	
 	go func() {
 		for {
-			time.Sleep(time.Second *15)
-			CreateSnapshot()
+			go CreateSnapshot()
 
 		}
 	}()
 	go func() {
 		for {
 			time.Sleep(time.Second * 20)
-			Sync_web_files()
+			//Sync_web_files()
 		}
 
 	}()
+	wg.Wait()
 
 }
 
