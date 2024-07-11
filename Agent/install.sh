@@ -9,7 +9,7 @@ if [[ $1 == "-debian" || $1 == "-ubuntu" ]]; then
     # INSTALL FOR DEBIAN
     echo -e  "\033[1;32mInstalling ASRS Agent dependencies......"
     sudo mkdir -p /etc/ASRS_agent/.config  2>/dev/null
-    cd /etc/ASRS_agent/.config && sudo touch config.json rsyncdU.password 2>/dev/null
+    cd /etc/ASRS_agent/.config && sudo touch config.json users.password 2>/dev/null
     sudo mkdir /etc/ASRS_agent/.database 2>/dev/null
     cd /etc/ASRS_agent/.database && sudo touch data.json logs.json 2>/dev/null
     sudo echo "snapper:Sn@pPeer" > /etc/ASRS_agent/.config/users.password
