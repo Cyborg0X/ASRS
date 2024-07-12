@@ -24,6 +24,7 @@ type Config struct {
 
 	Detectionmarker struct {
 		Markerisdetected bool
+		AttackerIP string `json:"attacker IP"` 
 	} `json:"Detection Marker"`
 	Filepath struct {
 		Configfilepath   string `json:"config file path"`
@@ -52,7 +53,10 @@ func InitializeJSON() error {
 			//SSH_username string `json:"SSH username"`
 			//SSHpass string `json:"password"`
 		}{IPaddr: "", Port: "1969", Webuser:"webuser", SnapshotsUser: "snapper" },
-		Detectionmarker: struct{ Markerisdetected bool }{Markerisdetected: false},
+		Detectionmarker: struct{ 
+			Markerisdetected bool
+			AttackerIP string `json:"attacker IP"` 
+			}{Markerisdetected: false, AttackerIP: ""},
 		Filepath: struct {
 			Configfilepath   string `json:"config file path"`
 			Databasefilepath string `json:"database file path"`
@@ -120,7 +124,6 @@ func WSInfoParser() (ip, port string) {
 		fmt.Println(red+"Error:"+reset, err)
 		return
 	}
-
 	var info Config
 	err = json.Unmarshal(filedata, &info)
 	if err != nil {

@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/Cyborg0X/ASRS/Workstation/internal/pkg/communication"
-	"github.com/Cyborg0X/ASRS/Workstation/internal/pkg/config"
+	"io/ioutil"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/Cyborg0X/ASRS/Workstation/internal/pkg/communication"
+	"github.com/Cyborg0X/ASRS/Workstation/internal/pkg/config"
 )
 
 var red = "\033[31m"
@@ -19,19 +21,25 @@ type DataType int
 
 const (
 	Typemessage DataType = iota
-	TypeSSH
+	TypeA2
 )
 
-type A1A2 struct {
+type A1 struct {
 	A string `json:"procedure"`
 }
 
-type SSH struct {
-	Proceduree string `json:"procedure"`
-	Username   string `json:"SSH username"`
-	Pass       string `json:"SSH pass"`
+type A2 struct {
+	A          string `json:"procedure"`
+	AttackerIP string `json:"Attacker IP"`
 }
 
+/*
+	type SSH struct {
+		Proceduree string `json:"procedure"`
+		Username   string `json:"SSH username"`
+		Pass       string `json:"SSH pass"`
+	}
+*/
 type DataWrapper struct {
 	Type DataType    `json:"type"`
 	Data interface{} `json:"data"`
@@ -45,8 +53,20 @@ func TaskHandler(wgd *sync.WaitGroup) {
 	get_done := make(chan bool)
 	defer close(get_done)
 	go Get_Status(&wg, get_done)
+
 	go checkIDS()
+
 	wg.Wait()
+
+}
+
+func checkIDS() {
+	// if log file detected a attack then procedureSelector
+	slp := make(chan bool, 1)
+	for {
+		procedureSelector("A2", slp)
+		<-slp
+	}
 
 }
 
@@ -60,7 +80,7 @@ func Get_Status(wg *sync.WaitGroup, getdone <-chan bool) {
 		default:
 			sleep := make(chan bool, 1)
 			go procedureSelector("A1", sleep)
-			if  <-sleep {
+			if <-sleep {
 				time.Sleep(time.Minute * 3)
 			}
 		}
@@ -69,10 +89,20 @@ func Get_Status(wg *sync.WaitGroup, getdone <-chan bool) {
 
 func procedureSelector(procedurename string, slp chan bool) {
 	// pass struct here and get the procedure function name like A1, A2
-
+	var config config.Config
+	filepath := "/etc/ASRS_WS/.config/config.json"
+	file, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		fmt.Println(red+"\nSelector MESSAGE: Error reading config file: %w"+reset, err) // Wrap error with context for other errors
+	}
+	err = json.Unmarshal(file, &config)
+	if err != nil {
+		fmt.Println(red+"\nSelector MESSAGE: Error Unmarshal config file: %w"+reset, err) // Wrap error with context for other errors
+	}
+	IP := config.Detectionmarker.AttackerIP
 	switch procedurename {
 	case "A1":
-		procedure := A1A2{
+		procedure := A1{
 			A: "A1",
 		}
 		wrapper := DataWrapper{
@@ -93,7 +123,7 @@ func procedureSelector(procedurename string, slp chan bool) {
 		if string(receivedmessage) == "B3PROC" {
 			slp <- true
 			return
-		}else {
+		} else {
 			slp <- false
 			return
 		}
@@ -101,16 +131,17 @@ func procedureSelector(procedurename string, slp chan bool) {
 		// handle response logging and shit
 	case "A2":
 
-		procedure := A1A2{
-			A: "A2",
+		procedure := A2{
+			A:	"A2",
+			AttackerIP: IP,
 		}
 		wrapper := DataWrapper{
-			Type: Typemessage,
+			Type: TypeA2,
 			Data: procedure,
 		}
 		Jsondata, err := json.MarshalIndent(wrapper, "", "  ")
 		if err != nil {
-			fmt.Println(red+"\nJSON MESSAGE: Failed to marshal A2:"+reset, err)
+			fmt.Println(red+"\nJSON MESSAGE: Failed to Marshal A2:"+reset, err)
 			return
 		}
 		receivedmessage, err := ProcedureSender(Jsondata, procedurename)
@@ -121,7 +152,7 @@ func procedureSelector(procedurename string, slp chan bool) {
 		if string(receivedmessage) == "B3PROC" {
 			slp <- true
 			return
-		}else {
+		} else {
 			slp <- false
 			return
 		}
@@ -155,7 +186,7 @@ func SaveKeys(received []byte) {
 
 func ProcedureSender(procedure []byte, procedurename string) (data []byte, err error) {
 
-	var ip, port = config.AgentInfoParser()
+	ip, port := config.AgentInfoParser()
 
 	// Try to send the data, and reconnect if the connection is lost
 	conn, err := communication.WS_dailer(ip, port)
@@ -295,8 +326,4 @@ func A2ResponseHandler(response string) {
 
 func B3ResquestHandler(reqeust string) {
 
-}
-
-func checkIDS() {
-	// if log file detected a attack then procedureSelector
 }

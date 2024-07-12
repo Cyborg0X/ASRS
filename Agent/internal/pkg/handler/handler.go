@@ -20,20 +20,26 @@ var filepath = "/etc/ASRS_agent/.config/config.json"
 type DataType int
 
 const (
-	Typemessage DataType = iota
-	TypeSSH
+	TypeA1 DataType = iota
+	TypeA2
 )
 
-type A1A2 struct {
+type A1 struct {
 	A string `json:"procedure"`
 }
 
-type SSH struct {
-	Proceduree string `json:"procedure"`
-	Username   string `json:"SSH username"`
-	Pass       string `json:"SSH pass"`
+type A2 struct {
+	A          string `json:"procedure"`
+	AttackerIP string `json:"Attacker IP"`
 }
 
+/*
+	type SSH struct {
+		Proceduree string `json:"procedure"`
+		Username   string `json:"SSH username"`
+		Pass       string `json:"SSH pass"`
+	}
+*/
 type DataWrapper struct {
 	Type DataType    `json:"type"`
 	Data interface{} `json:"data"`
@@ -42,7 +48,7 @@ type DataWrapper struct {
 func TaskHandler(wg *sync.WaitGroup, chanconn chan net.Conn, B3 bool) {
 	fmt.Println("TASK HANDLER STARTED")
 	defer wg.Done()
-	
+
 	if B3 {
 		wg.Add(1)
 		backchan := make(chan bool)
@@ -53,17 +59,17 @@ func TaskHandler(wg *sync.WaitGroup, chanconn chan net.Conn, B3 bool) {
 		var detected Config
 		filedata, _ := ioutil.ReadFile(filepath)
 		err := json.Unmarshal(filedata, &detected)
-		errorhandler(err,red+"RESTORE BACKUP MESSAGE: Failed to unmarshal marker:"+reset)
+		errorhandler(err, red+"RESTORE BACKUP MESSAGE: Failed to unmarshal marker:"+reset)
 		detected.Detectionmarker.Markerisdetected = false
-		
+
 	}
-	
+
 	if !B3 {
 		wg.Add(2)
 		go Local_actions(wg)
 	}
 
-	go ProcedureHandler(wg, chanconn,B3)
+	go ProcedureHandler(wg, chanconn, B3)
 	wg.Wait()
 
 }
@@ -80,7 +86,6 @@ func Response_Sender(message string, conn net.Conn) {
 		break
 	}
 }
-
 
 func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn, B3 bool) {
 	fmt.Println("PROCEDURE HANDLER STARTED")
@@ -107,28 +112,32 @@ func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn, B3 bool) {
 				//dataStr := fmt.Sprintf("%v", wrapper.Data)
 				//fmt.Println(wrapper.Data)
 				switch wrapper.Type {
-				case Typemessage:
+				case TypeA1:
 					dataMap := wrapper.Data.(map[string]interface{})
+
 					if dataMap["procedure"] == "A1" {
 						fmt.Println(green + "PROCEDURE MESSAGE: A1 RECEIVED" + reset)
 						if B3 {
-							Response_Sender("B3PROC",conneceted)
+							Response_Sender("B3PROC", conneceted)
 							return
 						}
 						go Get_Status()
 						return
-					} else if dataMap["procedure"] == "A2" {
-						fmt.Println(green + "PROCEDURE MESSAGE: A2 RECEIVED" + reset)
-						if B3 {
-							Response_Sender("B3PROC",conneceted)
-							return
-						}
-						go Heal_now()
+					}
+				case TypeA2:
+					dataMap := wrapper.Data.(map[string]interface{})
+					fmt.Println(green + "PROCEDURE MESSAGE: A2 RECEIVED" + reset)
+					attacker := dataMap["Attacker IP"]
+					AttackerIP(attacker.(string))
+					// mar
+					if B3 {
+						Response_Sender("B3PROC", conneceted)
 						return
 					}
+					go Heal_now()
+					return
 
 				}
-				
 			}
 
 		}
@@ -136,18 +145,35 @@ func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn, B3 bool) {
 
 }
 
+func AttackerIP(ip string) {
+	var marsh Config
+	filedata, err := ioutil.ReadFile("/etc/ASRS_agent/.config/config.json")
+	if err != nil {
+		fmt.Println(red+"Error:"+reset, err)
+		return
+	}
+	err = json.Unmarshal(filedata, &marsh)
+	if err != nil {
+		fmt.Println(red+"Error:"+reset, err)
+		return
+	}
+	marsh.Detectionmarker.AttackerIP = ip
+	conf, err := json.MarshalIndent(marsh, "", "  ")
+	err = ioutil.WriteFile("/etc/ASRS_agent/.config/config.json", conf, 0755)
+
+}
 
 func Local_actions(wg *sync.WaitGroup) {
 	fmt.Println("LOCAL ACTIONS STARTED")
 	// receive channel from B2 to terminate
 	wg.Add(1)
 	defer wg.Done()
-	
+
 	go func() {
 		cg := make(chan bool, 1)
 		for {
-		go CreateSnapshot(cg)
-		 <-cg
+			go CreateSnapshot(cg)
+			<-cg
 		}
 	}()
 	go func() {
@@ -174,7 +200,7 @@ func CreateSnapshot(vx chan bool) {
 	err := json.Unmarshal(snapshotlogs, &checker)
 	if err != nil {
 		fmt.Println(red+"Error: can't Unmarshal snapshotlogs"+reset, err)
-		
+
 		return
 	}
 	if !checker.Backup.FullSnapshot {
@@ -246,7 +272,7 @@ func CreateSnapshot(vx chan bool) {
 		rsynco := exec.Command("sudo", "rsync", "-av", "--delete", "/.snapshots", remote)
 		routput, err := rsynco.CombinedOutput()
 		if err != nil {
-			fmt.Println(red+"SNAPPER MESSAGE: Faild to sync snapshots"+reset)
+			fmt.Println(red + "SNAPPER MESSAGE: Faild to sync snapshots" + reset)
 			vx <- true
 			return
 		}
@@ -261,7 +287,6 @@ func CreateSnapshot(vx chan bool) {
 	// to set new default config >>>
 
 }
-
 
 func Sync_web_files() {
 	fmt.Println("SYNC WEB FILES STARTED")
@@ -309,21 +334,21 @@ func Sync_web_files() {
 
 }
 
-/* 
-func get_username(username string, pass string) {
-	fmt.Println("GET SSH USERNAME STARTED")
-	var put Config
-	passw := "/etc/ASRS_agent/.config/pass.txt"
-	var filesdata, _ = ioutil.ReadFile(filepath)
-	file := filesdata
-	_ = json.Unmarshal(file, &put)
-	put.Workstationinfo.SSH_username = username
-	put.Workstationinfo.SSHpass = username
-	jsondata, err := json.MarshalIndent(put, "", "  ")
-	errorhandler(err, red+"can't marshal username"+reset)
-	ioutil.WriteFile(filepath, jsondata, 0766)
-	ioutil.WriteFile(passw, []byte(pass), 0766)
-}
+/*
+	func get_username(username string, pass string) {
+		fmt.Println("GET SSH USERNAME STARTED")
+		var put Config
+		passw := "/etc/ASRS_agent/.config/pass.txt"
+		var filesdata, _ = ioutil.ReadFile(filepath)
+		file := filesdata
+		_ = json.Unmarshal(file, &put)
+		put.Workstationinfo.SSH_username = username
+		put.Workstationinfo.SSHpass = username
+		jsondata, err := json.MarshalIndent(put, "", "  ")
+		errorhandler(err, red+"can't marshal username"+reset)
+		ioutil.WriteFile(filepath, jsondata, 0766)
+		ioutil.WriteFile(passw, []byte(pass), 0766)
+	}
 
 func SSHkeys() {
 
@@ -332,5 +357,3 @@ func SSHkeys() {
 func ProcedureReceiver() {
 
 }
-
-
