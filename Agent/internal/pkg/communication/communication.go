@@ -49,7 +49,7 @@ func AG_Listener(ip string, port string, channel chan net.Conn) error {
 func AG_dialer() {
 
 }
-
+/*
 func Response_Sender(message string, conn net.Conn) {
 	fmt.Println("RESPONSE SENDER STARTED")
 	for {
@@ -60,7 +60,7 @@ func Response_Sender(message string, conn net.Conn) {
 		}
 	}
 }
-
+*/
 func Connect_to_ws(ipaddr string, port string) {
 	wsinfo := handler.Config{}
 	wsinfo.Workstationinfo.IPaddr = ipaddr

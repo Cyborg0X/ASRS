@@ -22,9 +22,9 @@ func main() {
 		fmt.Println(green+"Welcome agent of ASRS"+reset)
 	}
 	ip, port := handler.WSInfoParser()
+	B3 := logger.DetectionMarker()
 	procedure_chan := make(chan net.Conn, 1)
 	go communication.AG_Listener(ip, port, procedure_chan)
-	B3 := logger.DetectionMarker()
 	go handler.TaskHandler(&wg, procedure_chan, B3)
 	wg.Wait()
 

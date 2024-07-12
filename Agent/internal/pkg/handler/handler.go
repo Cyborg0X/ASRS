@@ -49,7 +49,13 @@ func TaskHandler(wg *sync.WaitGroup, chanconn chan net.Conn, B3 bool) {
 		fmt.Println("RESTORE BACKUP STARTED")
 		go Restore_Backup(backchan)
 		<-backchan
-		return
+		go ProcedureHandler(wg, chanconn, B3)
+		var detected Config
+		filedata, _ := ioutil.ReadFile(filepath)
+		err := json.Unmarshal(filedata, &detected)
+		errorhandler(err,red+"RESTORE BACKUP MESSAGE: Failed to unmarshal marker:"+reset)
+		detected.Detectionmarker.Markerisdetected = false
+		
 	}
 	
 	if !B3 {
@@ -57,12 +63,26 @@ func TaskHandler(wg *sync.WaitGroup, chanconn chan net.Conn, B3 bool) {
 		go Local_actions(wg)
 	}
 
-	go ProcedureHandler(wg, chanconn)
+	go ProcedureHandler(wg, chanconn,B3)
 	wg.Wait()
 
 }
 
-func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn) {
+func Response_Sender(message string, conn net.Conn) {
+	fmt.Println("RESPONSE SENDER STARTED")
+	for {
+		_, err := conn.Write([]byte(message))
+		if err != nil {
+			fmt.Println(red+"SENDER MESSAGE: Faild to send"+reset, message)
+			continue
+		}
+		conn.Close()
+		break
+	}
+}
+
+
+func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn, B3 bool) {
 	fmt.Println("PROCEDURE HANDLER STARTED")
 	defer wg.Done()
 
@@ -91,12 +111,20 @@ func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn) {
 					dataMap := wrapper.Data.(map[string]interface{})
 					if dataMap["procedure"] == "A1" {
 						fmt.Println(green + "PROCEDURE MESSAGE: A1 RECEIVED" + reset)
+						if B3 {
+							Response_Sender("B3PROC",conneceted)
+							return
+						}
 						go Get_Status()
-						break
+						return
 					} else if dataMap["procedure"] == "A2" {
 						fmt.Println(green + "PROCEDURE MESSAGE: A2 RECEIVED" + reset)
+						if B3 {
+							Response_Sender("B3PROC",conneceted)
+							return
+						}
 						go Heal_now()
-						break
+						return
 					}
 
 				}
@@ -108,112 +136,6 @@ func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn) {
 
 }
 
-func CreateSnapshot() {
-	fmt.Println("CREATE SNAPSHOT STARTED")
-	var counter int
-	asrs_conf := "ASRS_CONF"
-	discription := "Incremental Backup"
-	mountpoint := "/"
-	filedata, _ := ioutil.ReadFile(filepath)
-	snapshotlogs := filedata
-
-	var checker Config
-	err := json.Unmarshal(snapshotlogs, &checker)
-	if err != nil {
-		fmt.Println(red+"Error: can't Unmarshal snapshotlogs"+reset, err)
-		return
-	}
-	if !checker.Backup.FullSnapshot {
-
-		config := exec.Command("sudo", "snapper", "-c", asrs_conf, "create-config", mountpoint)
-		output, err := config.CombinedOutput()
-		if err != nil {
-			fmt.Printf(red+"SNAPPER MESSAGE: Failed to initiate first snapshot: %s\n"+reset, err)
-			fmt.Println(string(output))
-			return
-		}
-		fmt.Println(string(output)) // log it
-
-		checker.Backup.FullSnapshot = true
-		done, err := json.MarshalIndent(checker, "", "  ")
-		if err != nil {
-			fmt.Println(red + "SNAPPER MESSAGE: Failed to write to snapshot checker" + reset)
-		}
-		ioutil.WriteFile(filepath, done, 0766)
-
-		FULL := exec.Command("sudo", "snapper", "-c", asrs_conf, "create", "-t", "pre", "-d", "BASELINE SNAPSHOT")
-		output_full, err := FULL.CombinedOutput()
-		if err != nil {
-			fmt.Println(red + "SNAPPER MESSAGE: Failed to get output of pre snaphsot creation" + reset)
-		}
-		fmt.Println(string(output_full))
-
-	}
-	for {
-		checker.Detectionmarker.Markerisdetected = true
-		Updated_Marker, err := json.MarshalIndent(checker, "", "  ")
-		if err != nil {
-			date := time.Now()
-			fmt.Printf(red+"SNAPPER MESSAGE: Failed to write detection marker to `true`\n detection marker is false in the snapshot the has been taken in this time %v\n"+reset, date)
-		}
-		err = ioutil.WriteFile(filepath, Updated_Marker, 0766)
-		counter++
-
-		create := exec.Command("sudo", "snapper", "-c", asrs_conf, "create", "-d", discription)
-		output, err := create.CombinedOutput()
-		if err != nil {
-			fmt.Printf(red+"SNAPPER MESSAGE: Error creating snapshot number: %v\n ERROR: %v \n output: %v\n"+reset, counter, err, string(output))
-		}
-
-		checker.Backup.SnapshotNum = checker.Backup.SnapshotNum + 1
-		checker.Detectionmarker.Markerisdetected = false
-		done, err := json.MarshalIndent(checker, "", "  ")
-		if err != nil {
-			fmt.Println(red + "SNAPPER MESSAGE: Failed to write new snapshot number" + reset)
-		}
-		ioutil.WriteFile(filepath, done, 0766)
-		//remotepath := "/etc/ASRS_WS/.database/snapshots_backup/"
-		module := "snapshots"
-		remote := fmt.Sprintf("%v@%v::%v", checker.Workstationinfo.SnapshotsUser, checker.Workstationinfo.IPaddr, module)
-		fmt.Println(remote)
-		fmt.Println(string(output)) // log it later ALSO set JSON OUTPUT FORMAT IN SNAPPER
-		//pass := "--password-file=/etc/ASRS_agent/.config/pass.txt"
-		rsynco := exec.Command("sudo", "rsync", "-av", "--delete", "/.snapshots", remote)
-		routput, err := rsynco.CombinedOutput()
-		errorhandler(err, red+"SNAPPER MESSAGE: Faild to sync snapshots"+reset)
-		fmt.Println(string(routput))
-		time.Sleep(time.Minute * 4)
-
-	}
-	//for loop, wait for 1 hour, set detection marker, take snapshot, remove detection marker
-	// to list snapshots of config >>> sudo snapper -c ASRS_CONF list
-
-	// to set new default config >>>
-
-}
-/* 
-func get_username(username string, pass string) {
-	fmt.Println("GET SSH USERNAME STARTED")
-	var put Config
-	passw := "/etc/ASRS_agent/.config/pass.txt"
-	var filesdata, _ = ioutil.ReadFile(filepath)
-	file := filesdata
-	_ = json.Unmarshal(file, &put)
-	put.Workstationinfo.SSH_username = username
-	put.Workstationinfo.SSHpass = username
-	jsondata, err := json.MarshalIndent(put, "", "  ")
-	errorhandler(err, red+"can't marshal username"+reset)
-	ioutil.WriteFile(filepath, jsondata, 0766)
-	ioutil.WriteFile(passw, []byte(pass), 0766)
-}
-
-func SSHkeys() {
-
-}
-*/
-func ProcedureReceiver() {
-
-}
 
 func Local_actions(wg *sync.WaitGroup) {
 	fmt.Println("LOCAL ACTIONS STARTED")
@@ -222,9 +144,10 @@ func Local_actions(wg *sync.WaitGroup) {
 	defer wg.Done()
 	
 	go func() {
+		cg := make(chan bool, 1)
 		for {
-			go CreateSnapshot()
-
+		go CreateSnapshot(cg)
+		 <-cg
 		}
 	}()
 	go func() {
@@ -237,6 +160,108 @@ func Local_actions(wg *sync.WaitGroup) {
 	wg.Wait()
 
 }
+
+func CreateSnapshot(vx chan bool) {
+	fmt.Println("CREATE SNAPSHOT STARTED")
+	var counter int
+	asrs_conf := "ASRS_CONF"
+	discription := "Incremental Backup"
+	mountpoint := "/"
+	filedata, _ := ioutil.ReadFile(filepath)
+	snapshotlogs := filedata
+
+	var checker Config
+	err := json.Unmarshal(snapshotlogs, &checker)
+	if err != nil {
+		fmt.Println(red+"Error: can't Unmarshal snapshotlogs"+reset, err)
+		
+		return
+	}
+	if !checker.Backup.FullSnapshot {
+
+		config := exec.Command("sudo", "snapper", "-c", asrs_conf, "create-config", mountpoint)
+		output, err := config.CombinedOutput()
+		if err != nil {
+			fmt.Printf(red+"SNAPPER MESSAGE: Failed to initiate first snapshot: %s\n"+reset, err)
+			fmt.Println(string(output))
+			vx <- true
+			return
+		}
+		fmt.Println(string(output)) // log it
+
+		checker.Backup.FullSnapshot = true
+		done, err := json.MarshalIndent(checker, "", "  ")
+		if err != nil {
+			fmt.Println(red + "SNAPPER MESSAGE: Failed to write to snapshot checker" + reset)
+			vx <- true
+			return
+		}
+		ioutil.WriteFile(filepath, done, 0766)
+
+		FULL := exec.Command("sudo", "snapper", "-c", asrs_conf, "create", "-t", "pre", "-d", "BASELINE SNAPSHOT")
+		output_full, err := FULL.CombinedOutput()
+		if err != nil {
+			fmt.Println(red + "SNAPPER MESSAGE: Failed to get output of pre snaphsot creation" + reset)
+			vx <- true
+			return
+		}
+		fmt.Println(string(output_full))
+
+	}
+	for {
+		checker.Detectionmarker.Markerisdetected = true
+		Updated_Marker, err := json.MarshalIndent(checker, "", "  ")
+		if err != nil {
+			date := time.Now()
+			fmt.Printf(red+"SNAPPER MESSAGE: Failed to write detection marker to `true`\n detection marker is false in the snapshot the has been taken in this time %v\n"+reset, date)
+			vx <- true
+			return
+		}
+		err = ioutil.WriteFile(filepath, Updated_Marker, 0766)
+		counter++
+
+		create := exec.Command("sudo", "snapper", "-c", asrs_conf, "create", "-d", discription)
+		output, err := create.CombinedOutput()
+		if err != nil {
+			fmt.Printf(red+"SNAPPER MESSAGE: Error creating snapshot number: %v\n ERROR: %v \n output: %v\n"+reset, counter, err, string(output))
+			vx <- true
+			return
+		}
+
+		checker.Backup.SnapshotNum = checker.Backup.SnapshotNum + 1
+		checker.Detectionmarker.Markerisdetected = false
+		done, err := json.MarshalIndent(checker, "", "  ")
+		if err != nil {
+			fmt.Println(red + "SNAPPER MESSAGE: Failed to write new snapshot number" + reset)
+			vx <- true
+			return
+		}
+		ioutil.WriteFile(filepath, done, 0766)
+		//remotepath := "/etc/ASRS_WS/.database/snapshots_backup/"
+		module := "snapshots"
+		remote := fmt.Sprintf("%v@%v::%v", checker.Workstationinfo.SnapshotsUser, checker.Workstationinfo.IPaddr, module)
+		fmt.Println(remote)
+		fmt.Println(string(output)) // log it later ALSO set JSON OUTPUT FORMAT IN SNAPPER
+		//pass := "--password-file=/etc/ASRS_agent/.config/pass.txt"
+		rsynco := exec.Command("sudo", "rsync", "-av", "--delete", "/.snapshots", remote)
+		routput, err := rsynco.CombinedOutput()
+		if err != nil {
+			fmt.Println(red+"SNAPPER MESSAGE: Faild to sync snapshots"+reset)
+			vx <- true
+			return
+		}
+
+		fmt.Println(string(routput))
+		time.Sleep(time.Minute * 4)
+
+	}
+	//for loop, wait for 1 hour, set detection marker, take snapshot, remove detection marker
+	// to list snapshots of config >>> sudo snapper -c ASRS_CONF list
+
+	// to set new default config >>>
+
+}
+
 
 func Sync_web_files() {
 	fmt.Println("SYNC WEB FILES STARTED")
@@ -258,7 +283,7 @@ func Sync_web_files() {
 
 	//pass := "--password-file=/etc/ASRS_agent/.config/pass.txt"
 
-	go func() {
+	func() {
 		for i := 0; i < 2; i++ {
 
 			if i == 0 {
@@ -283,3 +308,29 @@ func Sync_web_files() {
 	}()
 
 }
+
+/* 
+func get_username(username string, pass string) {
+	fmt.Println("GET SSH USERNAME STARTED")
+	var put Config
+	passw := "/etc/ASRS_agent/.config/pass.txt"
+	var filesdata, _ = ioutil.ReadFile(filepath)
+	file := filesdata
+	_ = json.Unmarshal(file, &put)
+	put.Workstationinfo.SSH_username = username
+	put.Workstationinfo.SSHpass = username
+	jsondata, err := json.MarshalIndent(put, "", "  ")
+	errorhandler(err, red+"can't marshal username"+reset)
+	ioutil.WriteFile(filepath, jsondata, 0766)
+	ioutil.WriteFile(passw, []byte(pass), 0766)
+}
+
+func SSHkeys() {
+
+}
+*/
+func ProcedureReceiver() {
+
+}
+
+

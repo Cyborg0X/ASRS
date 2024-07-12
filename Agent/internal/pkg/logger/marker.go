@@ -6,8 +6,8 @@ import (
 
 func DetectionMarker() bool {
 	var detector handler.Config
-	if detector.Detectionmarker.Markerisdetected == true {
-		return true
+	if detector.Detectionmarker.Markerisdetected {
+		return detector.Detectionmarker.Markerisdetected
 	}
 	return false
 }

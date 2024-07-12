@@ -58,12 +58,16 @@ func Get_Status(wg *sync.WaitGroup, getdone <-chan bool) {
 		case <-getdone:
 			return
 		default:
-			go procedureSelector("A1")
+			sleep := make(chan bool, 1)
+			go procedureSelector("A1", sleep)
+			if  <-sleep {
+				time.Sleep(time.Minute * 3)
+			}
 		}
 	}
 }
 
-func procedureSelector(procedurename string) {
+func procedureSelector(procedurename string, slp chan bool) {
 	// pass struct here and get the procedure function name like A1, A2
 
 	switch procedurename {
@@ -81,11 +85,17 @@ func procedureSelector(procedurename string) {
 			fmt.Println(red+"\nJSON MESSAGE: Failed to marshal A1:"+reset, err)
 			break
 		}
-		_, err = ProcedureSender(jsondata, procedurename)
-
+		receivedmessage, err := ProcedureSender(jsondata, procedurename)
 		if err != nil {
-			fmt.Println(red+"COMMUNICATION MESSAGE: Failed to send A1 to Agent:"+reset, err)
-			break
+			fmt.Println(red+"\nCOMMUNICATION MESSAGE: Failed to send A1 to Agent:"+reset, err)
+			return
+		}
+		if string(receivedmessage) == "B3PROC" {
+			slp <- true
+			return
+		}else {
+			slp <- false
+			return
 		}
 
 		// handle response logging and shit
@@ -103,9 +113,16 @@ func procedureSelector(procedurename string) {
 			fmt.Println(red+"\nJSON MESSAGE: Failed to marshal A2:"+reset, err)
 			return
 		}
-		_, err = ProcedureSender(Jsondata, procedurename)
+		receivedmessage, err := ProcedureSender(Jsondata, procedurename)
 		if err != nil {
 			fmt.Println(red+"\nCOMMUNICATION MESSAGE: Failed to send A2 to Agent:"+reset, err)
+			return
+		}
+		if string(receivedmessage) == "B3PROC" {
+			slp <- true
+			return
+		}else {
+			slp <- false
 			return
 		}
 
