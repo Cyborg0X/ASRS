@@ -9,11 +9,11 @@ if [[ $1 == "-debian" || $1 == "-ubuntu" ]]; then
     # INSTALL FOR DEBIAN
     echo -e  "\033[1;32mInstalling ASRS Agent dependencies......"
     sudo mkdir -p /etc/ASRS_agent/.config  2>/dev/null
-    cd /etc/ASRS_agent/.config && sudo touch config.json users.password 2>/dev/null
+    cd /etc/ASRS_agent/.config && sudo touch senfiles.txt config.json users.password 2>/dev/null
     sudo mkdir /etc/ASRS_agent/.database 2>/dev/null
     cd /etc/ASRS_agent/.database && sudo touch data.json logs.json 2>/dev/null
-    sudo echo "snapper:Sn@pPeer" > /etc/ASRS_agent/.config/users.password
-    sudo echo "webuser:FG4@#%3" >> /etc/ASRS_agent/.config/users.password
+    echo "snapper:Sn@pPeer" > /etc/ASRS_agent/.config/users.password
+    echo "webuser:FG4@#%3" >> /etc/ASRS_agent/.config/users.password
     #sudo chmod 600 /etc/ASRS_agent/.config/users.password
     echo -e "\033[1;33mThe system is debian-based [OK]\033[0m"
     sudo chmod 0755 /.snapshots
@@ -42,7 +42,7 @@ if [[ $1 == "-debian" || $1 == "-ubuntu" ]]; then
     wait
     echo -e  "\033[1;32mGolang installed [OK]\033[0m"
     sleep 1s 
-    packages=("rsync" "snapper" "rsync-daemon")
+    packages=("rsync" "snapper" "rsync-daemon" "aide")
     
     for pkg in "${packages[@]}"; do
         echo -e  "\033[1;32minstalling $pkg ......\033[0m"
@@ -58,7 +58,55 @@ if [[ $1 == "-debian" || $1 == "-ubuntu" ]]; then
     wait $snort_pid
     echo -e  "\033[1;32msnort installed [OK]\033[0m"
 
+ 
+    #timestamp for history command
+    echo "export HISTTIMEFORMAT="%d/%m/%y %T "" >> ~/.bashrc
+    source < ~/.bashrc
 
+#!/bin/bash
+
+# AIDE Configuration
+    AIDE_CONFIG="/etc/ASRS_agent/.config/senfiles.txt"
+# Create the AIDE configuration file
+    cat << EOF > $AIDE_CONFIG
+/etc/passwd
+/etc/shadow
+/etc/sudoers
+/etc/crontab
+/etc/fstab
+/etc/sysctl.conf
+/etc/hosts
+/bin
+/sbin
+/usr/bin
+/usr/sbin
+/lib
+/usr/lib
+/etc/pam.d
+/etc/ssh
+/etc/firewall
+/etc/syslog.conf
+/etc/apache2
+/var/www
+/etc/mysql
+/var/lib/mysql
+/boot
+/etc/grub.d
+/etc/network
+/etc/resolv.conf
+/etc/hosts.allow
+/etc/hosts.deny
+/lib/modules
+/etc/modprobe.d
+/etc/snmpd.conf
+/etc/auditd.conf
+/etc/group
+/etc/gshadow
+/etc/ssh/sshd_config
+/etc/ssh/ssh_host_*_key
+EOF
+
+    
     echo -e  "\033[1;32mAll Dependencies installed [OK]\033[0m"
     go1version=$(go version)
     printf "\033[1;32m%s installed\033[0m\n" "$go1version"

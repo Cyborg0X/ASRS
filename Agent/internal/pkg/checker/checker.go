@@ -24,10 +24,7 @@ func Depcheck() bool {
 	packages := make([]string, 6)
 	packages[0] = "rsync"
 	packages[1] = "snapper"
-	packages[2] = "ssh"
-	packages[3] = "snort"
-	packages[4] = "openssh-server"
-	packages[5] = "openssh-client"
+
 	checklist := make(map[string]string)
 	update := exec.Command("sudo", "apt", "update")
 	update.Run()
@@ -60,7 +57,7 @@ func Depcheck() bool {
 		} 
 	}
 
-	if feelsgood == 6 {
+	if feelsgood == 2 {
 		fmt.Println(green+"ALL PACKAGES HAS BEEN INSTALLED SECCUSSFULLY"+reset)
 		fmt.Println(green+"Initilizing config file,,,,,,"+reset)
 		filepath := "/etc/ASRS_agent/.config/config.json"

@@ -8,7 +8,6 @@ import (
 	"github.com/Cyborg0X/ASRS/Agent/internal/pkg/checker"
 	"github.com/Cyborg0X/ASRS/Agent/internal/pkg/communication"
 	"github.com/Cyborg0X/ASRS/Agent/internal/pkg/handler"
-	"github.com/Cyborg0X/ASRS/Agent/internal/pkg/logger"
 )
 var green = "\033[32m"
 var reset = "\033[0m"
@@ -22,10 +21,10 @@ func main() {
 		fmt.Println(green+"Welcome agent of ASRS"+reset)
 	}
 	ip, port := handler.WSInfoParser()
-	B3 := logger.DetectionMarker()
+	
 	procedure_chan := make(chan net.Conn, 1)
 	go communication.AG_Listener(ip, port, procedure_chan)
-	go handler.TaskHandler(&wg, procedure_chan, B3)
+	go handler.TaskHandler(&wg, procedure_chan)
 	wg.Wait()
 
 	// return procedure from listener passed in channel and

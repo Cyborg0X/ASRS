@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"sync"
 	"time"
+
 )
 
 var red = "\033[31m"
@@ -31,6 +32,7 @@ type A1 struct {
 type A2 struct {
 	A          string `json:"procedure"`
 	AttackerIP string `json:"Attacker IP"`
+	AttackTime string `json:"Time of attack"`
 }
 
 /*
@@ -45,30 +47,27 @@ type DataWrapper struct {
 	Data interface{} `json:"data"`
 }
 
-func TaskHandler(wg *sync.WaitGroup, chanconn chan net.Conn, B3 bool) {
+func TaskHandler(wg *sync.WaitGroup, chanconn chan net.Conn) {
 	fmt.Println("TASK HANDLER STARTED")
 	defer wg.Done()
-
+	B3 := DetectionMarker()
 	if B3 {
 		wg.Add(1)
 		backchan := make(chan bool)
 		fmt.Println("RESTORE BACKUP STARTED")
 		go Restore_Backup(backchan)
 		<-backchan
-		go ProcedureHandler(wg, chanconn, B3)
+		ProcedureHandler(wg, chanconn, B3)
 		var detected Config
 		filedata, _ := ioutil.ReadFile(filepath)
 		err := json.Unmarshal(filedata, &detected)
 		errorhandler(err, red+"RESTORE BACKUP MESSAGE: Failed to unmarshal marker:"+reset)
 		detected.Detectionmarker.Markerisdetected = false
-
+		json.MarshalIndent(filedata, "", "  ")
 	}
-
-	if !B3 {
-		wg.Add(2)
-		go Local_actions(wg)
-	}
-
+	
+	wg.Add(2)
+	go Local_actions(wg)
 	go ProcedureHandler(wg, chanconn, B3)
 	wg.Wait()
 
@@ -95,49 +94,48 @@ func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn, B3 bool) {
 
 		if conneceted, ok := <-chanconn; ok {
 
-			for {
-				message := make([]byte, 1024)
-				n, err := conneceted.Read(message)
-				if err != nil {
-					fmt.Println(red+"Failed to read from connection:"+reset, err)
-					break
-				}
-				defer conneceted.Close()
-
-				var wrapper DataWrapper
-				k = k + 1
-
-				err = json.Unmarshal(message[:n], &wrapper)
-				errorhandler(err, red+"can't unmarshal received message"+reset)
-				//dataStr := fmt.Sprintf("%v", wrapper.Data)
-				//fmt.Println(wrapper.Data)
-				switch wrapper.Type {
-				case TypeA1:
-					dataMap := wrapper.Data.(map[string]interface{})
-
-					if dataMap["procedure"] == "A1" {
-						fmt.Println(green + "PROCEDURE MESSAGE: A1 RECEIVED" + reset)
-						if B3 {
-							Response_Sender("B3PROC", conneceted)
-							return
-						}
-						go Get_Status()
-						return
-					}
-				case TypeA2:
-					dataMap := wrapper.Data.(map[string]interface{})
-					fmt.Println(green + "PROCEDURE MESSAGE: A2 RECEIVED" + reset)
-					attacker := dataMap["Attacker IP"]
-					AttackerIP(attacker.(string))
-					// mar
+			message := make([]byte, 1024)
+			n, err := conneceted.Read(message)
+			if err != nil {
+				fmt.Println(red+"Failed to read from connection:"+reset, err)
+				break
+			}
+			defer conneceted.Close()
+			var wrapper DataWrapper
+			k = k + 1
+			err = json.Unmarshal(message[:n], &wrapper)
+			errorhandler(err, red+"can't unmarshal received message"+reset)
+			//dataStr := fmt.Sprintf("%v", wrapper.Data)
+			//fmt.Println(wrapper.Data)
+			switch wrapper.Type {
+			case TypeA1:
+				dataMap := wrapper.Data.(map[string]interface{})
+				if dataMap["procedure"] == "A1" {
+					fmt.Println(green + "PROCEDURE MESSAGE: A1 RECEIVED" + reset)
 					if B3 {
 						Response_Sender("B3PROC", conneceted)
+						B3 = false
 						return
 					}
-					go Heal_now()
-					return
-
+					go Get_Status()
+					
 				}
+			case TypeA2:
+				dataMap := wrapper.Data.(map[string]interface{})
+				fmt.Println(green + "PROCEDURE MESSAGE: A2 RECEIVED" + reset)
+				attacker := dataMap["Attacker IP"]
+				time := dataMap["Time of attack"]
+				AttackerIP(attacker.(string), time.(string))
+				// mar
+				if B3 {
+					Response_Sender("B3PROC", conneceted)
+					B3 = false
+					return
+				}
+				go Heal_now(time.(string))
+					
+
+				
 			}
 
 		}
@@ -145,7 +143,7 @@ func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn, B3 bool) {
 
 }
 
-func AttackerIP(ip string) {
+func AttackerIP(ip string, time string) {
 	var marsh Config
 	filedata, err := ioutil.ReadFile("/etc/ASRS_agent/.config/config.json")
 	if err != nil {
@@ -158,8 +156,10 @@ func AttackerIP(ip string) {
 		return
 	}
 	marsh.Detectionmarker.AttackerIP = ip
+	marsh.Detectionmarker.AttackTiming = time
 	conf, err := json.MarshalIndent(marsh, "", "  ")
-	err = ioutil.WriteFile("/etc/ASRS_agent/.config/config.json", conf, 0755)
+	errorhandler(err, red+"Attacker IP MESSAGE: Can't Marshal IP ADDRESS and Time of the attack"+reset)
+	_ = ioutil.WriteFile("/etc/ASRS_agent/.config/config.json", conf, 0755)
 
 }
 
@@ -190,9 +190,11 @@ func Local_actions(wg *sync.WaitGroup) {
 func CreateSnapshot(vx chan bool) {
 	fmt.Println("CREATE SNAPSHOT STARTED")
 	var counter int
-	asrs_conf := "ASRS_CONF"
-	discription := "Incremental Backup"
+	//asrs_conf := "ASRS_CONF"
+	//discription := "Incremental Backup"
 	mountpoint := "/"
+	module := "snapshots"
+
 	filedata, _ := ioutil.ReadFile(filepath)
 	snapshotlogs := filedata
 
@@ -203,81 +205,68 @@ func CreateSnapshot(vx chan bool) {
 
 		return
 	}
-	if !checker.Backup.FullSnapshot {
+	remote := fmt.Sprintf("%v@%v::%v", checker.Workstationinfo.SnapshotsUser, checker.Workstationinfo.IPaddr, module)
 
-		config := exec.Command("sudo", "snapper", "-c", asrs_conf, "create-config", mountpoint)
+	if !checker.Backup.FullSnapshot {
+		fmt.Println(green+"RSYNC MESSAGE: Started taking full backup for your system files, this process may take time please wait....."+reset)
+		config := exec.Command("sudo", "rsync", "-aAXv","--delete", mountpoint, `"--exclude={"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"}"`, remote )
 		output, err := config.CombinedOutput()
 		if err != nil {
-			fmt.Printf(red+"SNAPPER MESSAGE: Failed to initiate first snapshot: %s\n"+reset, err)
+			fmt.Printf(red+"RSYNC MESSAGE: Failed to take first backup: %s\n"+reset, err)
 			fmt.Println(string(output))
 			vx <- true
 			return
 		}
 		fmt.Println(string(output)) // log it
-
+		now := time.Now()
+		checker.Backup.Ltimestamp = now.Format("2006-01-02 15:04:05")
 		checker.Backup.FullSnapshot = true
 		done, err := json.MarshalIndent(checker, "", "  ")
 		if err != nil {
-			fmt.Println(red + "SNAPPER MESSAGE: Failed to write to snapshot checker" + reset)
+			fmt.Println(red + "RSYNC MESSAGE: Failed to write to snapshot checker" + reset)
 			vx <- true
 			return
 		}
 		ioutil.WriteFile(filepath, done, 0766)
 
-		FULL := exec.Command("sudo", "snapper", "-c", asrs_conf, "create", "-t", "pre", "-d", "BASELINE SNAPSHOT")
-		output_full, err := FULL.CombinedOutput()
-		if err != nil {
-			fmt.Println(red + "SNAPPER MESSAGE: Failed to get output of pre snaphsot creation" + reset)
-			vx <- true
-			return
-		}
-		fmt.Println(string(output_full))
 
 	}
 	for {
 		checker.Detectionmarker.Markerisdetected = true
 		Updated_Marker, err := json.MarshalIndent(checker, "", "  ")
 		if err != nil {
-			date := time.Now()
-			fmt.Printf(red+"SNAPPER MESSAGE: Failed to write detection marker to `true`\n detection marker is false in the snapshot the has been taken in this time %v\n"+reset, date)
+			now := time.Now()
+			fmt.Printf(red+"RSYNC MESSAGE: Failed to write detection marker to `true`\n detection marker is false in the backup the has been taken in this time %v\n"+reset, now.Format("2006-01-02 15:04:05"))
 			vx <- true
 			return
 		}
 		err = ioutil.WriteFile(filepath, Updated_Marker, 0766)
 		counter++
-
-		create := exec.Command("sudo", "snapper", "-c", asrs_conf, "create", "-d", discription)
+		time.Sleep(time.Second * 1)
+		fmt.Println(green+"RSYNC MESSAGE: Rsync started backup....."+reset, err)
+		create := exec.Command("sudo", "rsync", "-aAXv","--delete", mountpoint, `"--exclude={"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"}"`, remote )
 		output, err := create.CombinedOutput()
 		if err != nil {
-			fmt.Printf(red+"SNAPPER MESSAGE: Error creating snapshot number: %v\n ERROR: %v \n output: %v\n"+reset, counter, err, string(output))
+			fmt.Printf(red+"RSYNC MESSAGE: Error creating backup number: %v\n ERROR: %v \n output: %v\n"+reset, counter, err, string(output))
 			vx <- true
 			return
 		}
 
-		checker.Backup.SnapshotNum = checker.Backup.SnapshotNum + 1
+		now := time.Now()
+		checker.Backup.Ltimestamp = now.Format("2006-01-02 15:04:05")
 		checker.Detectionmarker.Markerisdetected = false
 		done, err := json.MarshalIndent(checker, "", "  ")
 		if err != nil {
-			fmt.Println(red + "SNAPPER MESSAGE: Failed to write new snapshot number" + reset)
+			fmt.Println(red + "SNAPPER MESSAGE: Failed to write detection marker to false" + reset)
 			vx <- true
 			return
 		}
 		ioutil.WriteFile(filepath, done, 0766)
 		//remotepath := "/etc/ASRS_WS/.database/snapshots_backup/"
-		module := "snapshots"
-		remote := fmt.Sprintf("%v@%v::%v", checker.Workstationinfo.SnapshotsUser, checker.Workstationinfo.IPaddr, module)
-		fmt.Println(remote)
+		//fmt.Println(remote)
 		fmt.Println(string(output)) // log it later ALSO set JSON OUTPUT FORMAT IN SNAPPER
 		//pass := "--password-file=/etc/ASRS_agent/.config/pass.txt"
-		rsynco := exec.Command("sudo", "rsync", "-av", "--delete", "/.snapshots", remote)
-		routput, err := rsynco.CombinedOutput()
-		if err != nil {
-			fmt.Println(red + "SNAPPER MESSAGE: Faild to sync snapshots" + reset)
-			vx <- true
-			return
-		}
-
-		fmt.Println(string(routput))
+		
 		time.Sleep(time.Minute * 4)
 
 	}
@@ -288,6 +277,27 @@ func CreateSnapshot(vx chan bool) {
 
 }
 
+func DetectionMarker() bool {
+	var detector Config
+	if detector.Detectionmarker.Markerisdetected {
+		return detector.Detectionmarker.Markerisdetected
+	}
+	return false
+}
+
+func ProcedureReceiver() {
+
+}
+
+
+
+
+
+
+
+
+
+/*
 func Sync_web_files() {
 	fmt.Println("SYNC WEB FILES STARTED")
 	// for loop and wait for sync file and log it
@@ -305,7 +315,6 @@ func Sync_web_files() {
 		"/var/lib/mysql/",
 		"/var/lib/pgsql/",
 	}
-
 	//pass := "--password-file=/etc/ASRS_agent/.config/pass.txt"
 
 	func() {
@@ -334,7 +343,6 @@ func Sync_web_files() {
 
 }
 
-/*
 	func get_username(username string, pass string) {
 		fmt.Println("GET SSH USERNAME STARTED")
 		var put Config
@@ -354,6 +362,3 @@ func SSHkeys() {
 
 }
 */
-func ProcedureReceiver() {
-
-}

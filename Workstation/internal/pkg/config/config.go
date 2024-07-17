@@ -39,6 +39,7 @@ type Config struct {
 	Detectionmarker struct {
 		AttackerIP string `json:"attacker IP"`
 		Markerisdetected bool `json:"detection marker"`
+		AttackTiming string `json:"Time of attack"`
 	} `json:"Detection Marker"`
 	Filepath struct {
 		Configfilepath   string `json:"config file path"`
@@ -64,7 +65,9 @@ func InitializeJSON() error {
 		Detectionmarker: struct{
 			AttackerIP string `json:"attacker IP"`
 			Markerisdetected bool `json:"detection marker"` 
-			}{Markerisdetected: false, AttackerIP: ""},
+			AttackTiming string `json:"Time of attack"`
+
+			}{Markerisdetected: false, AttackerIP: "", AttackTiming: ""},
 		Filepath: struct {
 			Configfilepath   string `json:"config file path"`
 			Databasefilepath string `json:"database file path"`

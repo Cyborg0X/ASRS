@@ -7,6 +7,7 @@ import (
 
 )
 
+
 type Config struct {
 	Agentinfo struct {
 		Ipaddr string `json:"AGIP"`
@@ -24,7 +25,9 @@ type Config struct {
 
 	Detectionmarker struct {
 		Markerisdetected bool
-		AttackerIP string `json:"attacker IP"` 
+		AttackerIP string `json:"attacker IP"`
+		AttackTiming string `json:"Time of attack"`
+
 	} `json:"Detection Marker"`
 	Filepath struct {
 		Configfilepath   string `json:"config file path"`
@@ -34,8 +37,14 @@ type Config struct {
 	Backup struct {
 		SnapshotNum  int32 `json:"Number of snapshots"`
 		FullSnapshot bool  `json:"First full Backup named Ryan checker"`
+		Ltimestamp string `json:"timestamp of the last backup"`
 	} `json:"backup"`
+
 }
+
+
+
+
 
 func InitializeJSON() error {
 
@@ -55,8 +64,9 @@ func InitializeJSON() error {
 		}{IPaddr: "", Port: "1969", Webuser:"webuser", SnapshotsUser: "snapper" },
 		Detectionmarker: struct{ 
 			Markerisdetected bool
-			AttackerIP string `json:"attacker IP"` 
-			}{Markerisdetected: false, AttackerIP: ""},
+			AttackerIP string `json:"attacker IP"`
+			AttackTiming string `json:"Time of attack"`
+			}{Markerisdetected: false, AttackerIP: "", AttackTiming: ""},
 		Filepath: struct {
 			Configfilepath   string `json:"config file path"`
 			Databasefilepath string `json:"database file path"`
@@ -67,7 +77,9 @@ func InitializeJSON() error {
 		Backup: struct {
 			SnapshotNum  int32 `json:"Number of snapshots"`
 			FullSnapshot bool  `json:"First full Backup named Ryan checker"`
-		}{FullSnapshot: false, SnapshotNum: 0},
+			Ltimestamp string `json:"timestamp of the last backup"`
+
+		}{FullSnapshot: false, SnapshotNum: 0, Ltimestamp: ""},
 	}
 
 	jsonData, err := json.MarshalIndent(defaultConfig, "", "  ")

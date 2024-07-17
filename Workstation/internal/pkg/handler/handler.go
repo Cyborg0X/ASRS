@@ -20,7 +20,7 @@ var reset = "\033[0m"
 type DataType int
 
 const (
-	Typemessage DataType = iota
+	TypeA1 DataType = iota
 	TypeA2
 )
 
@@ -31,6 +31,7 @@ type A1 struct {
 type A2 struct {
 	A          string `json:"procedure"`
 	AttackerIP string `json:"Attacker IP"`
+	AttackTime string `json:"Time of attack"`
 }
 
 /*
@@ -62,10 +63,17 @@ func TaskHandler(wgd *sync.WaitGroup) {
 
 func checkIDS() {
 	// if log file detected a attack then procedureSelector
+	// check IDS 
+	//.......
+
+	// SEND procedure if detected an attack
 	slp := make(chan bool, 1)
 	for {
 		procedureSelector("A2", slp)
-		<-slp
+		if !<-slp {
+			break
+		}
+		time.Sleep(time.Minute * 1)
 	}
 
 }
@@ -79,34 +87,21 @@ func Get_Status(wg *sync.WaitGroup, getdone <-chan bool) {
 			return
 		default:
 			sleep := make(chan bool, 1)
-			go procedureSelector("A1", sleep)
-			if <-sleep {
-				time.Sleep(time.Minute * 3)
-			}
+			go procedureSelector("A1", sleep); if <-sleep {time.Sleep(time.Minute * 3)}
 		}
 	}
 }
 
 func procedureSelector(procedurename string, slp chan bool) {
 	// pass struct here and get the procedure function name like A1, A2
-	var config config.Config
-	filepath := "/etc/ASRS_WS/.config/config.json"
-	file, err := ioutil.ReadFile(filepath)
-	if err != nil {
-		fmt.Println(red+"\nSelector MESSAGE: Error reading config file: %w"+reset, err) // Wrap error with context for other errors
-	}
-	err = json.Unmarshal(file, &config)
-	if err != nil {
-		fmt.Println(red+"\nSelector MESSAGE: Error Unmarshal config file: %w"+reset, err) // Wrap error with context for other errors
-	}
-	IP := config.Detectionmarker.AttackerIP
+	
 	switch procedurename {
 	case "A1":
 		procedure := A1{
 			A: "A1",
 		}
 		wrapper := DataWrapper{
-			Type: Typemessage,
+			Type: TypeA1,
 			Data: procedure,
 		}
 
@@ -131,9 +126,24 @@ func procedureSelector(procedurename string, slp chan bool) {
 		// handle response logging and shit
 	case "A2":
 
+		var config config.Config
+		filepath := "/etc/ASRS_WS/.config/config.json"
+		file, err := ioutil.ReadFile(filepath)
+		if err != nil {
+			fmt.Println(red+"\nSelector MESSAGE: Error reading config file: %w"+reset, err) // Wrap error with context for other errors
+		}
+		err = json.Unmarshal(file, &config)
+		if err != nil {
+			fmt.Println(red+"\nSelector MESSAGE: Error Unmarshal config file: %w"+reset, err) // Wrap error with context for other errors
+		}
+		IP := config.Detectionmarker.AttackerIP
+		time := config.Detectionmarker.AttackTiming
+
 		procedure := A2{
 			A:	"A2",
 			AttackerIP: IP,
+			AttackTime: time,
+
 		}
 		wrapper := DataWrapper{
 			Type: TypeA2,
