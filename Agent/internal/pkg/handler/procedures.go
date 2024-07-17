@@ -11,7 +11,8 @@ import (
 	"time"
 )
 
-func Heal_now(IDStimestamp string) {
+func Heal_now(IDStimestamp string, stopshot chan bool) {
+	stopshot <- true
 	fmt.Println("PROCEDURE MESSAGE: HEALING PROCESS HAS BEEN STARTED.....")
 	var detection Config
 	filedata, _ := ioutil.ReadFile(filepath)
@@ -30,7 +31,12 @@ func Heal_now(IDStimestamp string) {
 		}
 	}
 	
+	Done := CreateSnapshotTOcompare(IDStimestamp)
+	if Done {
+		fmt.Println("RSYNC MESSAGE: THE ROLLBACK IS COMPLETED SCECSSFULLY")
 
+	}
+	
 /*
 
 thershold is :
@@ -62,40 +68,22 @@ func CreateSnapshotTOcompare(Snorttimestamp string) bool {
 	}
 	remote := fmt.Sprintf("%v@%v::%v", backup.Workstationinfo.SnapshotsUser, backup.Workstationinfo.IPaddr, module)
 
-	/*
-	The example above shows the sample2rs.txt file is missing at the destination.
-
-Possible letters in the output are:
-
-    f – stands for file
-    d – shows the destination file is in question
-    t – shows the timestamp has changed
-    s – shows the size has changed*/
-	//this show diff between source and dest
-	// rsync -avi /home/test/Desktop/Linux/ /home/test/Desktop/rsync
-	// OR use --list-only to list the files that will be transfered
-	
-		// change it 
-
-	list := exec.Command("sudo", "rsync", "-aAXv","--list-only", `"--exclude={"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"}"`, remote, "/" )
+	list := exec.Command("sudo", "rsync", "-aAXv","--list-only", `"--exclude={"/etc/ASRS_agent/*", "/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"}"`, remote, "/" )
 	outputlist, err := list.CombinedOutput()
 	if err != nil {
 		fmt.Printf(red+"RSYNC MESSAGE: Error list files to be backed up, ERROR: %v \n output: %v\n"+reset, err, string(outputlist))
 	}
 
-	
-	
-	
 	snorttimestamp := "678687687"
 	isSnortafter := checktimeSN_SP(snorttimestamp, backup.Backup.Ltimestamp) // true or false
-	linesofdiff := checkdiffANDsenfiles(outputlist)
+	linesofdiff := checkdiffANDsenfiles(outputlist) // log it 
 	if !isSnortafter && len(linesofdiff) <= 0 {
 		return false
 	}else {
-		create := exec.Command("sudo", "rsync", "-aAXv","--delete",`"--exclude={"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"}"`, remote, "/" )
-		output, err := create.CombinedOutput()
+		create := exec.Command("sudo", "rsync", "-aAXv","--delete",`"--exclude={"/etc/ASRS_agent/*", "/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"}"`, remote, "/" )
+		_, err := create.CombinedOutput()
 		if err != nil {
-			fmt.Printf(red+"RSYNC MESSAGE: Error restore backup, ERROR: %v \n output: %v\n"+reset, err, string(output))
+			fmt.Printf(red+"RSYNC MESSAGE: Error restore backup, ERROR: %v \n output: %v\n"+reset)
 		}
 		return true
 	}
@@ -119,6 +107,20 @@ Possible letters in the output are:
 // uname -s
 // ncat -vvlp
 //
+	/*
+	The example above shows the sample2rs.txt file is missing at the destination.
+
+Possible letters in the output are:
+
+    f – stands for file
+    d – shows the destination file is in question
+    t – shows the timestamp has changed
+    s – shows the size has changed*/
+	//this show diff between source and dest
+	// rsync -avi /home/test/Desktop/Linux/ /home/test/Desktop/rsync
+	// OR use --list-only to list the files that will be transfered
+	
+		// change it 
 	
 	
 }
@@ -211,9 +213,6 @@ func Get_Status() {
 
 }
 
-
-
-/*	
 func Restore_Backup(done chan bool) {
 	fmt.Println("SYNC WEB FILES STARTED")
 	// for loop and wait for sync file and log it
@@ -263,13 +262,17 @@ func Restore_Backup(done chan bool) {
 	fmt.Println("RETORE BACKUP MESSAGE: Restoring Website Backup DONE")
 	done <- true
 }
-*/
+
 
 
 func Close_FirewallRules() {
+	var conf Config
+	filedata, _ := ioutil.ReadFile(filepath)
+	err := json.Unmarshal(filedata, &conf)
+	errorhandler(err, red+"FIND IP MESSAGE: Failed to unmarshal config"+reset)
 	// allow
-	_, _ = exec.Command("iptables", "-A", "INPUT", "-p", "tcp", "-s", "140.82.112.25", "-j", "ACCEPT").Output()
-	_, _ = exec.Command("iptables", "-A", "OUTPUT", "-p", "tcp", "-d", "140.82.112.25", "-j", "ACCEPT").Output()
+	_, _ = exec.Command("iptables", "-A", "INPUT", "-p", "tcp", "-s", conf.Workstationinfo.IPaddr, "-j", "ACCEPT").Output()
+	_, _ = exec.Command("iptables", "-A", "OUTPUT", "-p", "tcp", "-d", conf.Workstationinfo.IPaddr, "-j", "ACCEPT").Output()
 	// reject others
 	_, _ = exec.Command("iptables", "-A", "INPUT", "-j", "REJECT").Output()
 	_, _ = exec.Command("iptables", "-A", "OUTPUT", "-j", "REJECT").Output()
@@ -277,9 +280,14 @@ func Close_FirewallRules() {
 }
 
 func Open_FirewallRules() {
+	var conf Config
+	filedata, _ := ioutil.ReadFile(filepath)
+	err := json.Unmarshal(filedata, &conf)
+	errorhandler(err, red+"FIND IP MESSAGE: Failed to unmarshal config"+reset)
+
 	// remove
-	_, _ = exec.Command("iptables", "-D", "INPUT", "-p", "tcp", "-s", "140.82.112.25", "-j", "ACCEPT").Output()
-	_, _ = exec.Command("iptables", "-D", "OUTPUT", "-p", "tcp", "-d", "140.82.112.25", "-j", "ACCEPT").Output()
+	_, _ = exec.Command("iptables", "-D", "INPUT", "-p", "tcp", "-s", conf.Workstationinfo.IPaddr, "-j", "ACCEPT").Output()
+	_, _ = exec.Command("iptables", "-D", "OUTPUT", "-p", "tcp", "-d", conf.Workstationinfo.IPaddr, "-j", "ACCEPT").Output()
 
 	// relove reject
 	_, _ = exec.Command("iptables", "-D", "INPUT", "-j", "REJECT").Output()
