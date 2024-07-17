@@ -25,7 +25,7 @@ if [[ $1 == "-debian" || $1 == "-ubuntu" ]]; then
     fi
     echo -e  "\033[1;32mDownloading Golang please wait .....\033[0m"
     sudo apt install wget -y > /dev/null 2>&1
-    mkdir ~/golang
+    sudo mkdir ~/golang
     cd ~/golang || exit
     sudo wget https://go.dev/dl/go1.22.2.linux-amd64.tar.gz > /dev/null 2>&1 &
     wget_pid=$!
