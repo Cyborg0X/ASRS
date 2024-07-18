@@ -21,7 +21,7 @@ var reset = "\033[0m"
 
 func Depcheck() bool {
 	// return ack of
-	packages := make([]string, 6)
+	packages := make([]string, 1)
 	packages[0] = "rsync"
 
 	checklist := make(map[string]string)
