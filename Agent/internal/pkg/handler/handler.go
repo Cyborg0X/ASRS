@@ -158,7 +158,7 @@ func AttackerIP(ip string, time string) {
 	marsh.Detectionmarker.AttackTiming = time
 	conf, err := json.MarshalIndent(marsh, "", "  ")
 	errorhandler(err, red+"Attacker IP MESSAGE: Can't Marshal IP ADDRESS and Time of the attack"+reset)
-	_ = ioutil.WriteFile("/etc/ASRS_agent/.config/config.json", conf, 0755)
+	_ = ioutil.WriteFile("/etc/ASRS_agent/.config/config.json", conf, 0777)
 
 }
 
@@ -227,7 +227,7 @@ func CreateSnapshot(vx chan bool, stopshot chan bool) {
 			vx <- true
 			return
 		}
-		ioutil.WriteFile(filepath, done, 0766)
+		ioutil.WriteFile(filepath, done, 0777)
 
 	}
 
@@ -250,7 +250,7 @@ func CreateSnapshot(vx chan bool, stopshot chan bool) {
 			vx <- true
 			return
 		}
-		err = ioutil.WriteFile(filepath, Updated_Marker, 0766)
+		err = ioutil.WriteFile(filepath, Updated_Marker, 0777)
 		counter++
 		time.Sleep(time.Second * 1)
 		fmt.Println(green+"RSYNC MESSAGE: Rsync started backup....."+reset, err)
@@ -270,7 +270,7 @@ func CreateSnapshot(vx chan bool, stopshot chan bool) {
 			vx <- true
 			return
 		}
-		ioutil.WriteFile(filepath, done, 0766)
+		ioutil.WriteFile(filepath, done, 0200)
 		//remotepath := "/etc/ASRS_WS/.database/snapshots_backup/"
 		//fmt.Println(remote)
 		fmt.Println(string(output)) // log it later ALSO set JSON OUTPUT FORMAT IN SNAPPER

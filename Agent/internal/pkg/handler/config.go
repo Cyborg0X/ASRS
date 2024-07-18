@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-
 )
 
 
@@ -83,8 +82,8 @@ func InitializeJSON() error {
 	}
 
 	jsonData, err := json.MarshalIndent(defaultConfig, "", "  ")
-	errorhandler(err, red+"CONFIG ERROR:  Error parsing config file: %v"+reset,)
-	err = ioutil.WriteFile(defaultConfig.Filepath.Configfilepath, jsonData, 0766)
+	errorhandler(err, red+"CONFIG ERROR:  Error parsing config file:"+reset)
+	err = ioutil.WriteFile(defaultConfig.Filepath.Configfilepath, jsonData, 0777)
 	return nil
 }
 
