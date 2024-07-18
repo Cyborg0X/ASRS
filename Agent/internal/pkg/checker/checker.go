@@ -23,7 +23,6 @@ func Depcheck() bool {
 	// return ack of
 	packages := make([]string, 6)
 	packages[0] = "rsync"
-	packages[1] = "snapper"
 
 	checklist := make(map[string]string)
 	update := exec.Command("sudo", "apt", "update")
@@ -57,7 +56,7 @@ func Depcheck() bool {
 		} 
 	}
 
-	if feelsgood == 2 {
+	if feelsgood == 1 {
 		fmt.Println(green+"ALL PACKAGES HAS BEEN INSTALLED SECCUSSFULLY"+reset)
 		fmt.Println(green+"Initilizing config file,,,,,,"+reset)
 		filepath := "/etc/ASRS_agent/.config/config.json"
