@@ -56,7 +56,7 @@ func Depcheck() bool {
 		} 
 	}
 
-	if feelsgood == 1 {
+	if feelsgood == len(packages) {
 		fmt.Println(green+"ALL PACKAGES HAS BEEN INSTALLED SECCUSSFULLY"+reset)
 		fmt.Println(green+"Initilizing config file,,,,,,"+reset)
 		filepath := "/etc/ASRS_agent/.config/config.json"
