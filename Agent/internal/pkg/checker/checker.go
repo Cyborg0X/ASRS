@@ -29,13 +29,13 @@ func Depcheck() bool {
 	update.Run()
 	for i := range packages {
 		checkpkg := exec.Command("sudo", "dpkg", "-s", packages[i])
-		//install := exec.Command("sudo", "apt", "install", packages[i], "-y")
+		install := exec.Command("sudo", "apt", "install", packages[i], "-y")
 		output, err := checkpkg.CombinedOutput()
 		outputstr := string(output)
 		if err != nil {
 			checklist[packages[i]] = "NOT installed"
 			//fmt.Printf("installing %v..... please wait\n", packages[i])
-			//install.Run()
+			install.Run()
 
 		} else if strings.Contains(outputstr, "Status: install ok installed") {
 
