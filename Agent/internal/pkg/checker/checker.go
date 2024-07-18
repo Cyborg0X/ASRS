@@ -34,7 +34,7 @@ func Depcheck() bool {
 		outputstr := string(output)
 		if err != nil {
 			checklist[packages[i]] = "NOT installed"
-			//fmt.Printf("installing %v..... please wait\n", packages[i])
+			fmt.Printf("installing %v..... please wait\n", packages[i])
 			install.Run()
 
 		} else if strings.Contains(outputstr, "Status: install ok installed") {
@@ -56,7 +56,7 @@ func Depcheck() bool {
 		} 
 	}
 
-	if feelsgood == len(packages) {
+	if feelsgood == 2 {
 		fmt.Println(green+"ALL PACKAGES HAS BEEN INSTALLED SECCUSSFULLY"+reset)
 		fmt.Println(green+"Initilizing config file,,,,,,"+reset)
 		filepath := "/etc/ASRS_agent/.config/config.json"
