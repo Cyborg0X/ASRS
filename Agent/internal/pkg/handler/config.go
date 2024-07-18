@@ -83,7 +83,7 @@ func InitializeJSON() error {
 	}
 
 	jsonData, err := json.MarshalIndent(defaultConfig, "", "  ")
-	errorhandler(err, red+"CONFIG ERROR:  Error parsing config file"+reset)
+	errorhandler(err, red+"CONFIG ERROR:  Error parsing config file: %v"+reset,)
 	err = ioutil.WriteFile(defaultConfig.Filepath.Configfilepath, jsonData, 0766)
 	return nil
 }
@@ -148,6 +148,6 @@ func WSInfoParser() (ip, port string) {
 
 func errorhandler(err error, s string) {
 	if err != nil {
-		fmt.Println(red+"Error: "+reset, s, err)
+		fmt.Printf(red+"%vError: %v"+reset, s, err)
 	}
 }
