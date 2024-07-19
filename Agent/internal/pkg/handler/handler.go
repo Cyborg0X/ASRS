@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"os"
 	"os/exec"
 	"sync"
 	"time"
@@ -158,7 +159,9 @@ func AttackerIP(ip string, time string) {
 	marsh.Detectionmarker.AttackTiming = time
 	conf, err := json.MarshalIndent(marsh, "", "  ")
 	errorhandler(err, red+"Attacker IP MESSAGE: Can't Marshal IP ADDRESS and Time of the attack"+reset)
-	_ = ioutil.WriteFile("/etc/ASRS_agent/.config/config.json", conf, 0755)
+	fileper, _ := os.Stat(filepath)
+	per := fileper.Mode().Perm()
+	_ = ioutil.WriteFile("/etc/ASRS_agent/.config/config.json", conf, per)
 
 }
 
@@ -227,7 +230,9 @@ func CreateSnapshot(vx chan bool, stopshot chan bool) {
 			vx <- true
 			return
 		}
-		ioutil.WriteFile(filepath, done, 0755)
+		fileper, _ := os.Stat(filepath)
+		per := fileper.Mode().Perm()
+		ioutil.WriteFile(filepath, done, per)
 
 	}
 
@@ -250,7 +255,9 @@ func CreateSnapshot(vx chan bool, stopshot chan bool) {
 			vx <- true
 			return
 		}
-		err = ioutil.WriteFile(filepath, Updated_Marker, 0755)
+		fileper, _ := os.Stat(filepath)
+		per := fileper.Mode().Perm()
+		err = ioutil.WriteFile(filepath, Updated_Marker, per)
 		counter++
 		time.Sleep(time.Second * 1)
 		fmt.Println(green+"RSYNC MESSAGE: Rsync started backup....."+reset, err)
@@ -270,7 +277,8 @@ func CreateSnapshot(vx chan bool, stopshot chan bool) {
 			vx <- true
 			return
 		}
-		ioutil.WriteFile(filepath, done, 0755)
+		
+		ioutil.WriteFile(filepath, done, per)
 		//remotepath := "/etc/ASRS_WS/.database/snapshots_backup/"
 		//fmt.Println(remote)
 		fmt.Println(string(output)) // log it later ALSO set JSON OUTPUT FORMAT IN SNAPPER

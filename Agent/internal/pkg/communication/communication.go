@@ -107,7 +107,9 @@ func AssignWorkstationIP() error {
 		lookforip.Workstationinfo.IPaddr = strings.TrimSpace(lookforip.Workstationinfo.IPaddr) // Remove trailing newline
 		modifiedData, err := json.MarshalIndent(lookforip, "", "  ")
 		errorhandler(err, red+"Error marshaling JSON: "+reset)
-		err = ioutil.WriteFile(filepath, modifiedData, 0755)
+		fileper, _ := os.Stat(filepath)
+		per := fileper.Mode().Perm()
+		err = ioutil.WriteFile(filepath, modifiedData, per)
 		errorhandler(err, red+"Error writing JSON file:"+reset)
 		fmt.Printf(cyan+"Your Agent IP address is: %v\n"+reset, lookforip.Workstationinfo.IPaddr)
 		fmt.Printf(cyan+"Your Agent port is: %v\n"+reset, lookforip.Workstationinfo.Port)
@@ -147,8 +149,9 @@ func AssignAgentIP() error {
 		lookforip.Agentinfo.Ipaddr = strings.TrimSpace(lookforip.Agentinfo.Ipaddr) // Remove trailing newline
 		modifiedData, err := json.MarshalIndent(lookforip, "", "  ")
 		errorhandler(err, red+"Error marshaling JSON: "+reset)
-
-		err = ioutil.WriteFile(filepath, modifiedData, 0755)
+		fileper, _ := os.Stat(filepath)
+		per := fileper.Mode().Perm()
+		err = ioutil.WriteFile(filepath, modifiedData, per)
 		errorhandler(err, red+"Error writing JSON file:"+reset)
 		fmt.Printf(cyan+"Your Agent IP address is: %v\n"+reset, lookforip.Agentinfo.Ipaddr)
 		fmt.Printf(cyan+"Your Agent port is: %v\n"+reset, lookforip.Agentinfo.Port)
