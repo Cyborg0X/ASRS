@@ -79,7 +79,7 @@ func main() {
 	go func() {
 		for {
 			// progress events from file
-			progContent, err := readFile("progress.txt")
+			progContent, err := readFile("/etc/ASRS_agent/.config/progress.txt")
 			if err != nil {
 				log.Printf("failed to read events file: %v", err)
 			} else {
@@ -94,7 +94,7 @@ func main() {
 	go func() {
 		for {
 			// Read events from file
-			eventContent, err := readFile("events.txt")
+			eventContent, err := readFile("/etc/ASRS_agent/.config/events.txt")
 			if err != nil {
 				log.Printf("failed to read events file: %v", err)
 			} else {
@@ -111,7 +111,7 @@ func main() {
 
 		for {
 			// Read errors from file
-			errorContent, err := readFile("errors.txt")
+			errorContent, err := readFile("/etc/ASRS_agent/.config/errors.txt")
 			if err != nil {
 				log.Printf("failed to read errors file: %v", err)
 			} else {
@@ -127,7 +127,7 @@ func main() {
 	go func() {
 		for {
 			// Read notifications from file
-			notificationContent, err := readFile("notifications.txt")
+			notificationContent, err := readFile("/etc/ASRS_agent/.config/notifications.txt")
 			if err != nil {
 				log.Printf("failed to read notifications file: %v", err)
 			} else {
