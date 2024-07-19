@@ -68,19 +68,18 @@ func Depcheck() bool {
 			if err != nil {
 				fmt.Println(red+"Error initialize config file"+reset)
 			}
-
 		}
-
 		err := communication.AssignWorkstationIP()
 		if err != nil {
-			fmt.Println(red+"Erroring assigning Workstation IP address"+reset)
+			handler.Errorhandler(err, "Erroring assigning Workstation IP address")
 		}
 		err = communication.AssignAgentIP()
 		if err != nil {
-			fmt.Println(red+"Erroring assigning Agent IP address"+reset)
+			handler.Errorhandler(err,"Erroring assigning Agent IP address")
 		}
 		var detector handler.Config
 		fmt.Println(green+"marker : "+reset, detector.Detectionmarker)
+
 
 	} else {
 		panic(red+"Error checking startup"+reset)

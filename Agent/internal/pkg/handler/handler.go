@@ -62,7 +62,7 @@ func TaskHandler(wg *sync.WaitGroup, chanconn chan net.Conn) {
 		var detected Config
 		filedata, _ := ioutil.ReadFile(filepath)
 		err := json.Unmarshal(filedata, &detected)
-		errorhandler(err, red+"RESTORE BACKUP MESSAGE: Failed to unmarshal marker:"+reset)
+		Errorhandler(err, red+"RESTORE BACKUP MESSAGE: Failed to unmarshal marker:"+reset)
 		detected.Detectionmarker.Markerisdetected = false
 		json.MarshalIndent(filedata, "", "  ")
 	}
@@ -80,7 +80,7 @@ func Response_Sender(message string, conn net.Conn) {
 	for {
 		_, err := conn.Write([]byte(message))
 		if err != nil {
-			errorhandler(err, "SENDER MESSAGE: Faild to send")
+			Errorhandler(err, "SENDER MESSAGE: Faild to send")
 			continue
 		}
 		conn.Close()
@@ -100,14 +100,14 @@ func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn, B3 bool, stops
 			message := make([]byte, 1024)
 			n, err := conneceted.Read(message)
 			if err != nil {
-				errorhandler(err, fmt.Sprintf("Failed to read from connection: %v", err))
+				Errorhandler(err, fmt.Sprintf("Failed to read from connection: %v", err))
 				break
 			}
 			defer conneceted.Close()
 			var wrapper DataWrapper
 			k = k + 1
 			err = json.Unmarshal(message[:n], &wrapper)
-			errorhandler(err, red+"Can't unmarshal received message"+reset)
+			Errorhandler(err, red+"Can't unmarshal received message"+reset)
 			//dataStr := fmt.Sprintf("%v", wrapper.Data)
 			//fmt.Println(wrapper.Data)
 			switch wrapper.Type {
@@ -160,7 +160,7 @@ func AttackerIP(ip string, time string) {
 	marsh.Detectionmarker.AttackerIP = ip
 	marsh.Detectionmarker.AttackTiming = time
 	conf, err := json.MarshalIndent(marsh, "", "  ")
-	errorhandler(err, red+"Attacker IP MESSAGE: Can't Marshal IP ADDRESS and Time of the attack"+reset)
+	Errorhandler(err, red+"Attacker IP MESSAGE: Can't Marshal IP ADDRESS and Time of the attack"+reset)
 	fileper, _ := os.Stat(filepath)
 	per := fileper.Mode().Perm()
 	_ = ioutil.WriteFile("/etc/ASRS_agent/.config/config.json", conf, per)
@@ -208,7 +208,7 @@ func CreateSnapshot(vx chan bool, stopshot chan bool) {
 	var checker Config
 	err := json.Unmarshal(snapshotlogs, &checker)
 	if err != nil {
-		errorhandler(err, "BACKUP: Can't Unmarshal snapshot logs")
+		Errorhandler(err, "BACKUP: Can't Unmarshal snapshot logs")
 		return
 	}
 	remote := fmt.Sprintf("%v@%v::%v", checker.Workstationinfo.SnapshotsUser, checker.Workstationinfo.IPaddr, module)
@@ -218,7 +218,7 @@ func CreateSnapshot(vx chan bool, stopshot chan bool) {
 		config := exec.Command("sudo", "rsync", "-aAXv", "--delete", mountpoint, `"--exclude={"/etc/ASRS_agent/*", "/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"}"`, remote)
 		output, err := config.CombinedOutput()
 		if err != nil {
-			errorhandler(err, "RSYNC MESSAGE: Failed to take first backup:")
+			Errorhandler(err, "RSYNC MESSAGE: Failed to take first backup:")
 			vx <- true
 			return
 		}
@@ -228,7 +228,7 @@ func CreateSnapshot(vx chan bool, stopshot chan bool) {
 		checker.Backup.FullSnapshot = true
 		done, err := json.MarshalIndent(checker, "", "  ")
 		if err != nil {
-			errorhandler(err, "RSYNC MESSAGE: Failed to write to snapshot checker")
+			Errorhandler(err, "RSYNC MESSAGE: Failed to write to snapshot checker")
 			vx <- true
 			return
 		}
@@ -253,7 +253,7 @@ func CreateSnapshot(vx chan bool, stopshot chan bool) {
 		Updated_Marker, err := json.MarshalIndent(checker, "", "  ")
 		if err != nil {
 			now := time.Now()
-			errorhandler(err,fmt.Sprintf("RSYNC MESSAGE: Failed to write detection marker to `true`\n detection marker is false in the backup the has been taken in this time %v\n", now.Format("2006-01-02 15:04:05")))
+			Errorhandler(err,fmt.Sprintf("RSYNC MESSAGE: Failed to write detection marker to `true`\n detection marker is false in the backup the has been taken in this time %v\n", now.Format("2006-01-02 15:04:05")))
 			vx <- true
 			return
 		}
@@ -266,7 +266,7 @@ func CreateSnapshot(vx chan bool, stopshot chan bool) {
 		create := exec.Command("sudo", "rsync", "-aAXv", "--delete", mountpoint, `"--exclude={"/etc/ASRS_agent/*", "/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"}"`, remote)
 		output, err := create.CombinedOutput()
 		if err != nil {
-			errorhandler(err,fmt.Sprintf(red+"RSYNC Error creating backup number: %v\n ERROR: %v \n output: %v\n"+reset, counter, err, string(output)))
+			Errorhandler(err,fmt.Sprintf(red+"RSYNC Error creating backup number: %v\n ERROR: %v \n output: %v\n"+reset, counter, err, string(output)))
 			
 			vx <- true
 			return
@@ -276,7 +276,7 @@ func CreateSnapshot(vx chan bool, stopshot chan bool) {
 		checker.Detectionmarker.Markerisdetected = false
 		done, err := json.MarshalIndent(checker, "", "  ")
 		if err != nil {
-			errorhandler(err,"SNAPPER MESSAGE: Failed to write detection marker to false")
+			Errorhandler(err,"SNAPPER MESSAGE: Failed to write detection marker to false")
 			vx <- true
 			return
 		}
@@ -320,7 +320,7 @@ func Sync_web_files() {
 	websiteMOD := "website"
 	filedata, _ := ioutil.ReadFile(filepath)
 	err := json.Unmarshal(filedata, &conf)
-	errorhandler(err, red+"SYNC WEB FILES MESSAGE: Failed to unmarshal config"+reset)
+	Errorhandler(err, red+"SYNC WEB FILES MESSAGE: Failed to unmarshal config"+reset)
 	var website = []string{
 		"/var/www/html/",
 		"/usr/share/nginx/html/",
@@ -339,7 +339,7 @@ func Sync_web_files() {
 					remote := fmt.Sprintf("%v@%v::%v", conf.Workstationinfo.Webuser, conf.Workstationinfo.IPaddr, websiteMOD)
 					cmd := exec.Command("sudo", "rsync", "-av", "--delete", back, remote)
 					outpit, err := cmd.CombinedOutput()
-					errorhandler(err, red+"RSYNC MESSAGE: Faild to sync webiste files to remote directory"+reset)
+					Errorhandler(err, red+"RSYNC MESSAGE: Faild to sync webiste files to remote directory"+reset)
 					fmt.Println(string(outpit))
 				}
 			} else if i == 1 {
@@ -347,7 +347,7 @@ func Sync_web_files() {
 					remote := fmt.Sprintf("%v@%v::%v", conf.Workstationinfo.Webuser, conf.Workstationinfo.IPaddr, databaseMOD)
 					cmd := exec.Command("sudo", "rsync", "-av", "--delete", back, remote)
 					outpit, err := cmd.CombinedOutput()
-					errorhandler(err, red+"RSYNC MESSAGE: Faild to sync database files to remote directory"+reset)
+					Errorhandler(err, red+"RSYNC MESSAGE: Faild to sync database files to remote directory"+reset)
 					fmt.Println(string(outpit))
 				}
 			}
@@ -367,7 +367,7 @@ func Sync_web_files() {
 		put.Workstationinfo.SSH_username = username
 		put.Workstationinfo.SSHpass = username
 		jsondata, err := json.MarshalIndent(put, "", "  ")
-		errorhandler(err, red+"can't marshal username"+reset)
+		Errorhandler(err, red+"can't marshal username"+reset)
 		ioutil.WriteFile(filepath, jsondata, 0766)
 		ioutil.WriteFile(passw, []byte(pass), 0766)
 	}

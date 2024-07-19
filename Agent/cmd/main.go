@@ -19,6 +19,9 @@ var green = "\033[32m"
 var reset = "\033[0m"
 
 func main() {
+	wtcom := make(chan bool)
+	go Program(wtcom)
+	<-wtcom
 	if err := ui.Init(); err != nil {
 		log.Fatalf("failed to initialize termui: %v", err)
 	}
@@ -71,33 +74,36 @@ func main() {
 	//errorchan := make(chan string)
 	//notificationchan := make(chan string)
 
-	Program()
-
 	go func() {
-		// progress events from file
-		progContent, err := readFile("progress.txt")
-		if err != nil {
-			log.Printf("failed to read events file: %v", err)
-		} else {
-			eventWidget.Rows = progContent
+		for {
+			// progress events from file
+			progContent, err := readFile("progress.txt")
+			if err != nil {
+				log.Printf("failed to read events file: %v", err)
+			} else {
+				eventWidget.Rows = progContent
+			}
+			ui.Render(progresswidgets)
 		}
-		ui.Render(progresswidgets)
-
 	}()
 
 	go func() {
-		// Read events from file
-		eventContent, err := readFile("events.txt")
-		if err != nil {
-			log.Printf("failed to read events file: %v", err)
-		} else {
-			eventWidget.Rows = eventContent
-		}
+		for {
+			// Read events from file
+			eventContent, err := readFile("events.txt")
+			if err != nil {
+				log.Printf("failed to read events file: %v", err)
+			} else {
+				eventWidget.Rows = eventContent
+			}
 
-		ui.Render(eventWidget)
+			ui.Render(eventWidget)
+		}
 	}()
 
 	go func() {
+
+		for {
 			// Read errors from file
 			errorContent, err := readFile("errors.txt")
 			if err != nil {
@@ -105,10 +111,12 @@ func main() {
 			} else {
 				errorWidget.Rows = errorContent
 			}
-		ui.Render(errorWidget)
+			ui.Render(errorWidget)
+		}
 	}()
 
 	go func() {
+		for {
 			// Read notifications from file
 			notificationContent, err := readFile("notifications.txt")
 			if err != nil {
@@ -116,9 +124,9 @@ func main() {
 			} else {
 				notificationWidget.Rows = notificationContent
 			}
-		ui.Render(notificationWidget)
+			ui.Render(notificationWidget)
+		}
 	}()
-
 	// Start the main event loop
 	uiEvents := ui.PollEvents()
 	for {
@@ -129,14 +137,16 @@ func main() {
 			}
 		}
 	}
+	
 }
 
-func Program() {
+func Program(kek chan bool) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	checkdone := checker.Depcheck()
 	if checkdone {
 		fmt.Println(green + "Welcome agent of ASRS" + reset)
+		kek <- true
 	}
 	ip, port := handler.WSInfoParser()
 

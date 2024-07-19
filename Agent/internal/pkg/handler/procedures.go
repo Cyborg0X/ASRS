@@ -17,7 +17,7 @@ func Heal_now(IDStimestamp string, stopshot chan bool) {
 	var detection Config
 	filedata, _ := ioutil.ReadFile(filepath)
 	err := json.Unmarshal(filedata, &detection)
-	errorhandler(err, red+"IP Attacker MESSAGE: Failed to Unmarshal config file"+reset)
+	Errorhandler(err, red+"IP Attacker MESSAGE: Failed to Unmarshal config file"+reset)
 	for {
 
 		ip := findIP()
@@ -213,7 +213,7 @@ func Restore_Backup(done chan bool) {
 	websiteMOD := "website"
 	filedata, _ := ioutil.ReadFile(filepath)
 	err := json.Unmarshal(filedata, &conf)
-	errorhandler(err, red+"RESTORE WEB FILES MESSAGE: Failed to unmarshal config"+reset)
+	Errorhandler(err, red+"RESTORE WEB FILES MESSAGE: Failed to unmarshal config"+reset)
 	var website = []string{
 		"/var/www/html/",
 		"/usr/share/nginx/html/",
@@ -233,7 +233,7 @@ func Restore_Backup(done chan bool) {
 					remote := fmt.Sprintf("%v@%v::%v", conf.Workstationinfo.Webuser, conf.Workstationinfo.IPaddr, websiteMOD)
 					cmd := exec.Command("sudo", "rsync", "-av", "--delete", remote, back)
 					outpit, err := cmd.CombinedOutput()
-					errorhandler(err, red+"RSYNC RESTORE MESSAGE: Faild to restore webiste files to remote directory"+reset)
+					Errorhandler(err, red+"RSYNC RESTORE MESSAGE: Faild to restore webiste files to remote directory"+reset)
 					fmt.Println(string(outpit))
 				}
 			} else if i == 1 {
@@ -241,7 +241,7 @@ func Restore_Backup(done chan bool) {
 					remote := fmt.Sprintf("%v@%v::%v", conf.Workstationinfo.Webuser, conf.Workstationinfo.IPaddr, databaseMOD)
 					cmd := exec.Command("sudo", "rsync", "-av", "--delete", remote, back)
 					outpit, err := cmd.CombinedOutput()
-					errorhandler(err, red+"RSYNC RESTORE MESSAGE: Faild to restore database files to remote directory"+reset)
+					Errorhandler(err, red+"RSYNC RESTORE MESSAGE: Faild to restore database files to remote directory"+reset)
 					fmt.Println(string(outpit))
 				}
 			}
@@ -258,7 +258,7 @@ func Close_FirewallRules() {
 	var conf Config
 	filedata, _ := ioutil.ReadFile(filepath)
 	err := json.Unmarshal(filedata, &conf)
-	errorhandler(err, red+"FIND IP MESSAGE: Failed to unmarshal config"+reset)
+	Errorhandler(err, red+"FIND IP MESSAGE: Failed to unmarshal config"+reset)
 	// allow
 	_, _ = exec.Command("iptables", "-A", "INPUT", "-p", "tcp", "-s", conf.Workstationinfo.IPaddr, "-j", "ACCEPT").Output()
 	_, _ = exec.Command("iptables", "-A", "OUTPUT", "-p", "tcp", "-d", conf.Workstationinfo.IPaddr, "-j", "ACCEPT").Output()
@@ -275,7 +275,7 @@ func Open_FirewallRules() {
 	var conf Config
 	filedata, _ := ioutil.ReadFile(filepath)
 	err := json.Unmarshal(filedata, &conf)
-	errorhandler(err, red+"FIND IP MESSAGE: Failed to unmarshal config"+reset)
+	Errorhandler(err, red+"FIND IP MESSAGE: Failed to unmarshal config"+reset)
 
 	// remove
 	_, _ = exec.Command("iptables", "-D", "INPUT", "-p", "tcp", "-s", conf.Workstationinfo.IPaddr, "-j", "ACCEPT").Output()
@@ -295,7 +295,7 @@ func findIP() []string {
 	var conf Config
 	filedata, _ := ioutil.ReadFile(filepath)
 	err := json.Unmarshal(filedata, &conf)
-	errorhandler(err, red+"FIND IP MESSAGE: Failed to unmarshal config"+reset)
+	Errorhandler(err, red+"FIND IP MESSAGE: Failed to unmarshal config"+reset)
 
 	cmd := exec.Command("sh", "-c", "ss -antp")
 	output, err := cmd.Output()

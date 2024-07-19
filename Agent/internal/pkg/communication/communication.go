@@ -17,7 +17,7 @@ var reset = "\033[0m"
 var cyan = "\033[36m"
 
 func AG_Listener(ip string, port string, channel chan net.Conn) error {
-	fmt.Println("AG LISTNER STARTED")
+	handler.EventHandler("AG LISTNER STARTED")
 	//retryDelay := 5 * time.Second
 	var listenerr net.Listener
 	var err error
@@ -27,19 +27,18 @@ func AG_Listener(ip string, port string, channel chan net.Conn) error {
 
 		listenerr, err = net.Listen("tcp", address)
 		if err != nil {
+			errorhandler(err,"COMMUNICATION: Failed to create a listener")
 			
-			fmt.Println(red+"COMMUNICATION MESSAGE: Failed to create a listener"+reset, err)
-			fmt.Println(address)
 			continue
 		}
 
 		for {
 			connf, err = listenerr.Accept()
 			if err != nil {
-				fmt.Println(red+"COMMUNICATION MESSAGE: Failed to accept connection"+reset, err)
+				errorhandler(err,"COMMUNICATION MESSAGE: Failed to accept connection")
 				continue
 			} else {
-				fmt.Println(green+"COMMUNICATION MESSAGE: Connection Accepted"+reset)
+				handler.ProgHandler("COMMUNICATION MESSAGE: Connection Accepted")
 				channel <- connf
 			}
 
@@ -85,10 +84,10 @@ func AssignWorkstationIP() error {
 
 	file, err := ioutil.ReadFile(filepath)
 	if err != nil {
-
-		return fmt.Errorf(red+"error reading config file: %v"+reset, err) // Wrap error with context for other errors
+		errorhandler(err,"error reading config file")
+		//return //fmt.Errorf(red+"error reading config file: %v"+reset, err) // Wrap error with context for other errors
 	}
-	errorhandler(err, "Error reading config file: ")
+	//errorhandler(err, "Error reading config file: ")
 
 	var lookforip handler.Config
 	err = json.Unmarshal(file, &lookforip)
