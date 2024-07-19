@@ -3,10 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/Cyborg0X/ASRS/Agent/internal/pkg/checker"
 	"github.com/Cyborg0X/ASRS/Agent/internal/pkg/communication"
@@ -77,27 +79,31 @@ func main() {
 	go func() {
 		for {
 			// progress events from file
-			progContent, err := readFile("/etc/ASRS_agent/.config/progress.txt")
+			progContent, err := readFile("progress.txt")
 			if err != nil {
 				log.Printf("failed to read events file: %v", err)
 			} else {
-				eventWidget.Rows = progContent
-			}
+				for _, line := range progContent {
+					progresswidgets.Rows = append(progresswidgets.Rows, line)
+				}			}
 			ui.Render(progresswidgets)
+			time.Sleep(time.Millisecond * 100)
 		}
 	}()
 
 	go func() {
 		for {
 			// Read events from file
-			eventContent, err := readFile("/etc/ASRS_agent/.config/events.txt")
+			eventContent, err := readFile("events.txt")
 			if err != nil {
 				log.Printf("failed to read events file: %v", err)
 			} else {
-				eventWidget.Rows = eventContent
-			}
+				for _, line := range eventContent {
+					eventWidget.Rows = append(eventWidget.Rows, line)
+				}			}
 
 			ui.Render(eventWidget)
+			time.Sleep(time.Millisecond * 100)
 		}
 	}()
 
@@ -105,26 +111,31 @@ func main() {
 
 		for {
 			// Read errors from file
-			errorContent, err := readFile("/etc/ASRS_agent/.config/errors.txt")
+			errorContent, err := readFile("errors.txt")
 			if err != nil {
 				log.Printf("failed to read errors file: %v", err)
 			} else {
-				errorWidget.Rows = errorContent
+				for _, line := range errorContent {
+					errorWidget.Rows = append(errorWidget.Rows, line)
+				}
 			}
 			ui.Render(errorWidget)
+			time.Sleep(time.Millisecond * 100)
 		}
 	}()
 
 	go func() {
 		for {
 			// Read notifications from file
-			notificationContent, err := readFile("/etc/ASRS_agent/.config/notifications.txt")
+			notificationContent, err := readFile("notifications.txt")
 			if err != nil {
 				log.Printf("failed to read notifications file: %v", err)
 			} else {
-				notificationWidget.Rows = notificationContent
-			}
+				for _, line := range notificationContent {
+					notificationWidget.Rows = append(notificationWidget.Rows, line)
+				}			}
 			ui.Render(notificationWidget)
+			time.Sleep(time.Millisecond * 100)
 		}
 	}()
 	// Start the main event loop
@@ -179,4 +190,23 @@ func readFile(filename string) ([]string, error) {
 	}
 
 	return content, nil
+}
+
+func Errorhandler(err error, s string) { 
+	if err != nil {
+		g := fmt.Sprintf("%v: %v", s, err)
+		ioutil.WriteFile("error.txt",[]byte(g), 0755)
+	}
+}
+
+func EventHandler(s string)  {
+	ioutil.WriteFile("event.txt",[]byte(s), 0755)
+}
+
+func NotiHandler(s string)  {
+	ioutil.WriteFile("noti.txt",[]byte(s), 0755)
+}
+
+func ProgHandler(s string)  {
+	ioutil.WriteFile("progress.txt",[]byte(s), 0755)
 }
