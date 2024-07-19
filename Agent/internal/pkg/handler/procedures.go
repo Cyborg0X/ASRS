@@ -34,7 +34,7 @@ func Heal_now(IDStimestamp string, stopshot chan bool) {
 	Done := CreateSnapshotTOcompare(IDStimestamp)
 	if Done {
 		fmt.Println("RSYNC MESSAGE: THE ROLLBACK IS COMPLETED SCECSSFULLY")
-
+		stopshot <- false
 	}
 	
 /*

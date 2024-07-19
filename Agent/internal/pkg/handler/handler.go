@@ -144,6 +144,7 @@ func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn, B3 bool, stops
 }
 
 func AttackerIP(ip string, time string) {
+
 	var marsh Config
 	filedata, err := ioutil.ReadFile("/etc/ASRS_agent/.config/config.json")
 	if err != nil {
@@ -162,6 +163,8 @@ func AttackerIP(ip string, time string) {
 	fileper, _ := os.Stat(filepath)
 	per := fileper.Mode().Perm()
 	_ = ioutil.WriteFile("/etc/ASRS_agent/.config/config.json", conf, per)
+	fmt.Println(green + "Attacker IP MESSAGE: Attacker IP saved" + reset)
+
 
 }
 
@@ -233,6 +236,8 @@ func CreateSnapshot(vx chan bool, stopshot chan bool) {
 		fileper, _ := os.Stat(filepath)
 		per := fileper.Mode().Perm()
 		ioutil.WriteFile(filepath, done, per)
+		fmt.Println(green + "RSYNC MESSAGE: Backup completed ....." + reset)
+
 
 	}
 
@@ -241,7 +246,7 @@ func CreateSnapshot(vx chan bool, stopshot chan bool) {
 		select {
 		case value := <-stopshot:
 			if value {
-				time.Sleep(time.Minute * 5)
+				<-stopshot
 			}
 		default:
 			
@@ -279,6 +284,8 @@ func CreateSnapshot(vx chan bool, stopshot chan bool) {
 		}
 		
 		ioutil.WriteFile(filepath, done, per)
+		fmt.Println(green + "RSYNC MESSAGE: SYSTEM FILES SYNCED " + reset)
+
 		//remotepath := "/etc/ASRS_WS/.database/snapshots_backup/"
 		//fmt.Println(remote)
 		fmt.Println(string(output)) // log it later ALSO set JSON OUTPUT FORMAT IN SNAPPER
@@ -297,7 +304,9 @@ func CreateSnapshot(vx chan bool, stopshot chan bool) {
 func DetectionMarker() bool {
 	var detector Config
 	if detector.Detectionmarker.Markerisdetected {
+		fmt.Println(green + "DETECTION MARKER MESSAGE: DETELCTION MARKER EXIST " + reset)
 		return detector.Detectionmarker.Markerisdetected
+		
 	}
 	return false
 }
