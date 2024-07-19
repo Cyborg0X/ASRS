@@ -55,7 +55,7 @@ func TaskHandler(wgd *sync.WaitGroup) {
 	defer close(get_done)
 	go Get_Status(&wg, get_done)
 
-	go checkIDS()
+	//go checkIDS()
 
 	wg.Wait()
 

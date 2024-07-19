@@ -48,14 +48,14 @@ type DataWrapper struct {
 }
 
 func TaskHandler(wg *sync.WaitGroup, chanconn chan net.Conn) {
-	fmt.Println("TASK HANDLER STARTED")
+	EventHandler("ASRS TASK HANDLER STARTED")
 	stopshot := make(chan bool, 1)
 	defer wg.Done()
 	B3 := DetectionMarker()
 	if B3 {
 		wg.Add(1)
 		backchan := make(chan bool)
-		fmt.Println("RESTORE BACKUP STARTED")
+		EventHandler("ASRS RESTORE BACKUP STARTED")
 		go Restore_Backup(backchan)
 		<-backchan
 		ProcedureHandler(wg, chanconn, B3, stopshot)
@@ -76,11 +76,11 @@ func TaskHandler(wg *sync.WaitGroup, chanconn chan net.Conn) {
 }
 
 func Response_Sender(message string, conn net.Conn) {
-	fmt.Println("RESPONSE SENDER STARTED")
+	EventHandler("RESPONSE SENDER IN ACTION")
 	for {
 		_, err := conn.Write([]byte(message))
 		if err != nil {
-			fmt.Println(red+"SENDER MESSAGE: Faild to send"+reset, message)
+			errorhandler(err, "SENDER MESSAGE: Faild to send")
 			continue
 		}
 		conn.Close()
@@ -89,31 +89,32 @@ func Response_Sender(message string, conn net.Conn) {
 }
 
 func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn, B3 bool, stopshot chan bool) {
-	fmt.Println("PROCEDURE HANDLER STARTED")
+	EventHandler("PROCEDURE HANDLER STARTED")
+	fmt.Println()
 	defer wg.Done()
 
 	for {
-	
+
 		if conneceted, ok := <-chanconn; ok {
-		
+
 			message := make([]byte, 1024)
 			n, err := conneceted.Read(message)
 			if err != nil {
-				fmt.Println(red+"Failed to read from connection:"+reset, err)
+				errorhandler(err, fmt.Sprintf("Failed to read from connection: %v", err))
 				break
 			}
 			defer conneceted.Close()
 			var wrapper DataWrapper
 			k = k + 1
 			err = json.Unmarshal(message[:n], &wrapper)
-			errorhandler(err, red+"can't unmarshal received message"+reset)
+			errorhandler(err, red+"Can't unmarshal received message"+reset)
 			//dataStr := fmt.Sprintf("%v", wrapper.Data)
 			//fmt.Println(wrapper.Data)
 			switch wrapper.Type {
 			case TypeA1:
 				dataMap := wrapper.Data.(map[string]interface{})
 				if dataMap["procedure"] == "A1" {
-					fmt.Println(green + "PROCEDURE MESSAGE: A1 RECEIVED" + reset)
+					ProgHandler("PROCEDURE A1 RECEIVED")
 					if B3 {
 						Response_Sender("B3PROC", conneceted)
 						B3 = false
@@ -124,7 +125,7 @@ func ProcedureHandler(wg *sync.WaitGroup, chanconn chan net.Conn, B3 bool, stops
 				}
 			case TypeA2:
 				dataMap := wrapper.Data.(map[string]interface{})
-				fmt.Println(green + "PROCEDURE MESSAGE: A2 RECEIVED" + reset)
+				ProgHandler("PROCEDURE A2 RECEIVED")
 				attacker := dataMap["Attacker IP"]
 				time := dataMap["Time of attack"]
 				AttackerIP(attacker.(string), time.(string))
@@ -165,11 +166,10 @@ func AttackerIP(ip string, time string) {
 	_ = ioutil.WriteFile("/etc/ASRS_agent/.config/config.json", conf, per)
 	fmt.Println(green + "Attacker IP MESSAGE: Attacker IP saved" + reset)
 
-
 }
 
 func Local_actions(wg *sync.WaitGroup, stopshot chan bool) {
-	fmt.Println("LOCAL ACTIONS STARTED")
+	EventHandler("LOCAL ACTIONS STARTED")
 	// receive channel from B2 to terminate
 	wg.Add(1)
 	defer wg.Done()
@@ -184,7 +184,7 @@ func Local_actions(wg *sync.WaitGroup, stopshot chan bool) {
 	go func() {
 		for {
 			time.Sleep(time.Second * 20)
-			fmt.Println(green + "WEB SYNC MESSAGE: SYNCING WEB FILES...." + reset)
+			ProgHandler("SYNCING WEB FILES...")
 			//Sync_web_files()
 		}
 
@@ -194,11 +194,12 @@ func Local_actions(wg *sync.WaitGroup, stopshot chan bool) {
 }
 
 func CreateSnapshot(vx chan bool, stopshot chan bool) {
-	fmt.Println("CREATE SNAPSHOT STARTED")
+	ProgHandler("ASRS CREATING SNAPSHOT...")
+	fmt.Println()
 	var counter int
 	//asrs_conf := "ASRS_CONF"
 	//discription := "Incremental Backup"
-	mountpoint := "/"
+	mountpoint := "/home/agent/"
 	module := "snapshots"
 
 	filedata, _ := ioutil.ReadFile(filepath)
@@ -207,19 +208,17 @@ func CreateSnapshot(vx chan bool, stopshot chan bool) {
 	var checker Config
 	err := json.Unmarshal(snapshotlogs, &checker)
 	if err != nil {
-		fmt.Println(red+"Error: can't Unmarshal snapshotlogs"+reset, err)
-
+		errorhandler(err, "BACKUP: Can't Unmarshal snapshot logs")
 		return
 	}
 	remote := fmt.Sprintf("%v@%v::%v", checker.Workstationinfo.SnapshotsUser, checker.Workstationinfo.IPaddr, module)
 
 	if !checker.Backup.FullSnapshot {
-		fmt.Println(green + "RSYNC MESSAGE: Started taking full backup for your system files, this process may take time please wait....." + reset)
+		EventHandler("RSYNC Started taking full backup for your system files, this process may take time please wait.....")
 		config := exec.Command("sudo", "rsync", "-aAXv", "--delete", mountpoint, `"--exclude={"/etc/ASRS_agent/*", "/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"}"`, remote)
 		output, err := config.CombinedOutput()
 		if err != nil {
-			fmt.Printf(red+"RSYNC MESSAGE: Failed to take first backup: %s\n"+reset, err)
-			fmt.Println(string(output))
+			errorhandler(err, "RSYNC MESSAGE: Failed to take first backup:")
 			vx <- true
 			return
 		}
@@ -229,15 +228,14 @@ func CreateSnapshot(vx chan bool, stopshot chan bool) {
 		checker.Backup.FullSnapshot = true
 		done, err := json.MarshalIndent(checker, "", "  ")
 		if err != nil {
-			fmt.Println(red + "RSYNC MESSAGE: Failed to write to snapshot checker" + reset)
+			errorhandler(err, "RSYNC MESSAGE: Failed to write to snapshot checker")
 			vx <- true
 			return
 		}
 		fileper, _ := os.Stat(filepath)
 		per := fileper.Mode().Perm()
 		ioutil.WriteFile(filepath, done, per)
-		fmt.Println(green + "RSYNC MESSAGE: Backup completed ....." + reset)
-
+		ProgHandler("RSYNC MESSAGE: Backup completed ....." )
 
 	}
 
@@ -249,14 +247,13 @@ func CreateSnapshot(vx chan bool, stopshot chan bool) {
 				<-stopshot
 			}
 		default:
-			
-			fmt.Println("RSYNC MESSAGE: Started taking backup")
+			ProgHandler("RSYNC Started taking backup...")
 		}
 		checker.Detectionmarker.Markerisdetected = true
 		Updated_Marker, err := json.MarshalIndent(checker, "", "  ")
 		if err != nil {
 			now := time.Now()
-			fmt.Printf(red+"RSYNC MESSAGE: Failed to write detection marker to `true`\n detection marker is false in the backup the has been taken in this time %v\n"+reset, now.Format("2006-01-02 15:04:05"))
+			errorhandler(err,fmt.Sprintf("RSYNC MESSAGE: Failed to write detection marker to `true`\n detection marker is false in the backup the has been taken in this time %v\n", now.Format("2006-01-02 15:04:05")))
 			vx <- true
 			return
 		}
@@ -265,11 +262,12 @@ func CreateSnapshot(vx chan bool, stopshot chan bool) {
 		err = ioutil.WriteFile(filepath, Updated_Marker, per)
 		counter++
 		time.Sleep(time.Second * 1)
-		fmt.Println(green+"RSYNC MESSAGE: Rsync started backup....."+reset, err)
+
 		create := exec.Command("sudo", "rsync", "-aAXv", "--delete", mountpoint, `"--exclude={"/etc/ASRS_agent/*", "/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"}"`, remote)
 		output, err := create.CombinedOutput()
 		if err != nil {
-			fmt.Printf(red+"RSYNC MESSAGE: Error creating backup number: %v\n ERROR: %v \n output: %v\n"+reset, counter, err, string(output))
+			errorhandler(err,fmt.Sprintf(red+"RSYNC Error creating backup number: %v\n ERROR: %v \n output: %v\n"+reset, counter, err, string(output)))
+			
 			vx <- true
 			return
 		}
@@ -278,20 +276,18 @@ func CreateSnapshot(vx chan bool, stopshot chan bool) {
 		checker.Detectionmarker.Markerisdetected = false
 		done, err := json.MarshalIndent(checker, "", "  ")
 		if err != nil {
-			fmt.Println(red + "SNAPPER MESSAGE: Failed to write detection marker to false" + reset)
+			errorhandler(err,"SNAPPER MESSAGE: Failed to write detection marker to false")
 			vx <- true
 			return
 		}
-		
+
 		ioutil.WriteFile(filepath, done, per)
-		fmt.Println(green + "RSYNC MESSAGE: SYSTEM FILES SYNCED " + reset)
+		ProgHandler("RSYNC MESSAGE: SYSTEM FILES SYNCED")
 
 		//remotepath := "/etc/ASRS_WS/.database/snapshots_backup/"
 		//fmt.Println(remote)
-		fmt.Println(string(output)) // log it later ALSO set JSON OUTPUT FORMAT IN SNAPPER
+		//fmt.Println(string(output)) // log it later ALSO set JSON OUTPUT FORMAT IN SNAPPER
 		//pass := "--password-file=/etc/ASRS_agent/.config/pass.txt"
-
-		
 
 	}
 }
@@ -304,9 +300,9 @@ func CreateSnapshot(vx chan bool, stopshot chan bool) {
 func DetectionMarker() bool {
 	var detector Config
 	if detector.Detectionmarker.Markerisdetected {
-		fmt.Println(green + "DETECTION MARKER MESSAGE: DETELCTION MARKER EXIST " + reset)
+		EventHandler("DETECTION MARKER MESSAGE: DETELCTION MARKER EXIST")
 		return detector.Detectionmarker.Markerisdetected
-		
+
 	}
 	return false
 }

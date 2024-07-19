@@ -27,6 +27,7 @@ func AG_Listener(ip string, port string, channel chan net.Conn) error {
 
 		listenerr, err = net.Listen("tcp", address)
 		if err != nil {
+			
 			fmt.Println(red+"COMMUNICATION MESSAGE: Failed to create a listener"+reset, err)
 			fmt.Println(address)
 			continue

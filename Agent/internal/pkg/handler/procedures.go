@@ -30,30 +30,26 @@ func Heal_now(IDStimestamp string, stopshot chan bool) {
 			break
 		}
 	}
-	
+
 	Done := CreateSnapshotTOcompare(IDStimestamp)
 	if Done {
 		fmt.Println("RSYNC MESSAGE: THE ROLLBACK IS COMPLETED SCECSSFULLY")
 		stopshot <- false
 	}
-	
-/*
 
-thershold is :
- - history 
- -  use diff command to look for hcanges between the snapshot and the current system state 
- - timestamp before or after 
+	/*
 
-*/
+	   thershold is :
+	    - history
+	    -  use diff command to look for hcanges between the snapshot and the current system state
+	    - timestamp before or after
 
-
-	
-	
+	*/
 
 }
 
-func IDS()  {
-	
+func IDS() {
+
 }
 
 func CreateSnapshotTOcompare(Snorttimestamp string) bool {
@@ -68,7 +64,7 @@ func CreateSnapshotTOcompare(Snorttimestamp string) bool {
 	}
 	remote := fmt.Sprintf("%v@%v::%v", backup.Workstationinfo.SnapshotsUser, backup.Workstationinfo.IPaddr, module)
 
-	list := exec.Command("sudo", "rsync", "-aAXv","--list-only", `"--exclude={"/etc/ASRS_agent/*", "/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"}"`, remote, "/" )
+	list := exec.Command("sudo", "rsync", "-aAXv", "--list-only", `"--exclude={"/etc/ASRS_agent/*", "/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"}"`, remote, "/")
 	outputlist, err := list.CombinedOutput()
 	if err != nil {
 		fmt.Printf(red+"RSYNC MESSAGE: Error list files to be backed up, ERROR: %v \n output: %v\n"+reset, err, string(outputlist))
@@ -76,14 +72,14 @@ func CreateSnapshotTOcompare(Snorttimestamp string) bool {
 
 	snorttimestamp := "678687687"
 	isSnortafter := checktimeSN_SP(snorttimestamp, backup.Backup.Ltimestamp) // true or false
-	linesofdiff := checkdiffANDsenfiles(outputlist) // log it 
+	linesofdiff := checkdiffANDsenfiles(outputlist)                          // log it
 	if !isSnortafter && len(linesofdiff) <= 0 {
 		return false
-	}else {
-		create := exec.Command("sudo", "rsync", "-aAXv","--delete",`"--exclude={"/etc/ASRS_agent/*", "/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"}"`, remote, "/" )
+	} else {
+		create := exec.Command("sudo", "rsync", "-aAXv", "--delete", `"--exclude={"/etc/ASRS_agent/*", "/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"}"`, remote, "/")
 		_, err := create.CombinedOutput()
 		if err != nil {
-			fmt.Printf(red+"RSYNC MESSAGE: Error restore backup, ERROR: %v \n output: %v\n"+reset)
+			fmt.Printf(red + "RSYNC MESSAGE: Error restore backup, ERROR: %v \n output: %v\n" + reset)
 		}
 		return true
 	}
@@ -91,42 +87,41 @@ func CreateSnapshotTOcompare(Snorttimestamp string) bool {
 	//conf.ASRS_CONF = append(conf.ASRS_CONF, )
 
 	/*
-	0 - check the last snapshots timestamp and the timestamp of the attack
-	1 - make a txt file that contains the sensitive config files 
-	2 - load the files and put it with diff 
-	3 - rotate into files that changed and log it
-	4 - if files changed && if history contains mal commands then rollback 
-	 or 
-	 use aide tool to check sensitive files changes and compare the change if after or before the attack 
-	 if after the attack then rollback -+
+		0 - check the last snapshots timestamp and the timestamp of the attack
+		1 - make a txt file that contains the sensitive config files
+		2 - load the files and put it with diff
+		3 - rotate into files that changed and log it
+		4 - if files changed && if history contains mal commands then rollback
+		 or
+		 use aide tool to check sensitive files changes and compare the change if after or before the attack
+		 if after the attack then rollback -+
 
 	*/
-// whoami
-// uname -a 
-// cat /etc/passwd
-// uname -s
-// ncat -vvlp
-//
+	// whoami
+	// uname -a
+	// cat /etc/passwd
+	// uname -s
+	// ncat -vvlp
+	//
 	/*
-	The example above shows the sample2rs.txt file is missing at the destination.
+			The example above shows the sample2rs.txt file is missing at the destination.
 
-Possible letters in the output are:
+		Possible letters in the output are:
 
-    f – stands for file
-    d – shows the destination file is in question
-    t – shows the timestamp has changed
-    s – shows the size has changed*/
+		    f – stands for file
+		    d – shows the destination file is in question
+		    t – shows the timestamp has changed
+		    s – shows the size has changed*/
 	//this show diff between source and dest
 	// rsync -avi /home/test/Desktop/Linux/ /home/test/Desktop/rsync
 	// OR use --list-only to list the files that will be transfered
-	
-		// change it 
-	
-	
+
+	// change it
+
 }
 
-func checkdiffANDsenfiles(diff []byte) ([]string) {
-	senfiles :="/etc/ASRS_agent/.config/senfiles.txt"
+func checkdiffANDsenfiles(diff []byte) []string {
+	senfiles := "/etc/ASRS_agent/.config/senfiles.txt"
 
 	conns := []string{}
 	senfiles_lines := senloadlines(senfiles)
@@ -150,7 +145,7 @@ func checkdiffANDsenfiles(diff []byte) ([]string) {
 	return conns
 }
 
-func senloadlines(file string) ([]string) {
+func senloadlines(file string) []string {
 	filedata, err := os.Open(file)
 	if err != nil {
 		fmt.Println("Error opening file:", err)
@@ -172,25 +167,22 @@ func senloadlines(file string) ([]string) {
 	return lines
 }
 
-
-
-
-func checktimeSN_SP(Snort_time,snap_time string)(bool) {
+func checktimeSN_SP(Snort_time, snap_time string) bool {
 
 	currentYear := time.Now().Year()
 	Snort_time = fmt.Sprintf("%d/%s", currentYear, Snort_time)
-	layout1 :="2006/01/02-15:04:05.000000"
+	layout1 := "2006/01/02-15:04:05.000000"
 	SNORTparsed, err := time.Parse(layout1, Snort_time)
 	if err != nil {
 		fmt.Println("Error parsing timestamp1:", err)
-		
+
 	}
 
 	layout2 := "2006-01-02 15:04:05"
 	SNAPparsed, err := time.Parse(layout2, snap_time)
 	if err != nil {
 		fmt.Println("Error parsing timestamp2:", err)
-		
+
 	}
 
 	// Compare the parsed timestamps
@@ -207,7 +199,6 @@ func checktimeSN_SP(Snort_time,snap_time string)(bool) {
 	}
 }
 
-
 func Get_Status() {
 	fmt.Println("PROCEDURE MESSAGE: STATUS HAS BEEN SENT")
 
@@ -216,7 +207,6 @@ func Get_Status() {
 func Restore_Backup(done chan bool) {
 	fmt.Println("SYNC WEB FILES STARTED")
 	// for loop and wait for sync file and log it
-
 
 	var conf Config
 	databaseMOD := "database"
@@ -263,9 +253,8 @@ func Restore_Backup(done chan bool) {
 	done <- true
 }
 
-
-
 func Close_FirewallRules() {
+	fmt.Println(green + "FIREWALL MESSAGE: STARTING CLOSING CONNECTIONS " + reset)
 	var conf Config
 	filedata, _ := ioutil.ReadFile(filepath)
 	err := json.Unmarshal(filedata, &conf)
@@ -277,9 +266,12 @@ func Close_FirewallRules() {
 	_, _ = exec.Command("iptables", "-A", "INPUT", "-j", "REJECT").Output()
 	_, _ = exec.Command("iptables", "-A", "OUTPUT", "-j", "REJECT").Output()
 	_, _ = exec.Command("systemctl", "restart", "iptables").Output()
+	fmt.Println(green + "FIREWALL MESSAGE: CLOSING CONNECTIONS COMPLETED" + reset)
 }
 
 func Open_FirewallRules() {
+	fmt.Println(green + "FIREWALL MESSAGE: OPENING CONNECTIONS " + reset)
+
 	var conf Config
 	filedata, _ := ioutil.ReadFile(filepath)
 	err := json.Unmarshal(filedata, &conf)
@@ -293,15 +285,17 @@ func Open_FirewallRules() {
 	_, _ = exec.Command("iptables", "-D", "INPUT", "-j", "REJECT").Output()
 	_, _ = exec.Command("iptables", "-D", "OUTPUT", "-j", "REJECT").Output()
 	_, _ = exec.Command("systemctl", "restart", "iptables").Output()
+	fmt.Println(green + "FIREWALL MESSAGE: OPEINING CONNECTIONS COMPLETED" + reset)
+
 }
 
 func findIP() []string {
+	fmt.Println(green + "SEARCHING FOR ATTACKER IP CONNECTIONS" + reset)
 
 	var conf Config
 	filedata, _ := ioutil.ReadFile(filepath)
 	err := json.Unmarshal(filedata, &conf)
 	errorhandler(err, red+"FIND IP MESSAGE: Failed to unmarshal config"+reset)
-
 
 	cmd := exec.Command("sh", "-c", "ss -antp")
 	output, err := cmd.Output()
@@ -320,19 +314,15 @@ func findIP() []string {
 				//fmt.Printf("Line contains both %v and 192.168.43.37 :%v\n", substrings[i], strings.TrimSpace(line))
 				conns = append(conns, line)
 
-				// log lines of connecitons 
+				// log lines of connecitons
 			}
 		}
 	}
-	fmt.Println(conns)
+	//fmt.Println(conns)
 	if err := scanner.Err(); err != nil {
 		fmt.Println("Error scanning output:", err)
 	}
+	fmt.Println(green + "SEARCHING FOR ATTACKER IP CONNECTIONS COMPTELED" + reset)
+
 	return conns
 }
-
-
-
-
-
-

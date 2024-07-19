@@ -86,9 +86,7 @@ func InitializeJSON() error {
 	jsonData, err := json.MarshalIndent(defaultConfig, "", "  ")
 	errorhandler(err, red+"CONFIG ERROR:  Error parsing config file:"+reset)
 	err = ioutil.WriteFile("/etc/ASRS_agent/.config/config.json", jsonData, per)
-	if err != nil {
-		fmt.Printf("ERROR WRITING: %v",err)
-	}
+	errorhandler(err, "CONFIG MESSAGE: Failed to write data to config file")
 	return nil
 }
 
@@ -136,22 +134,29 @@ func configparser() *Config {
 
 func WSInfoParser() (ip, port string) {
 	filedata, err := ioutil.ReadFile("/etc/ASRS_agent/.config/config.json")
-	if err != nil {
-		fmt.Println(red+"Error:"+reset, err)
-		return
-	}
+	errorhandler(err, "WS INFOPARSER MESSAGE: failed to read data")
 	var info Config
 	err = json.Unmarshal(filedata, &info)
-	if err != nil {
-		fmt.Println(red+"Error:"+reset, err)
-		return
-	}
+	errorhandler(err, "WS INFOPARSER MESSAGE: failed to Unmarshal data")
 	return info.Workstationinfo.IPaddr, info.Agentinfo.Port
 
 }
 
-func errorhandler(err error, s string) {
+func errorhandler(err error, s string) { 
 	if err != nil {
 		fmt.Printf(red+"%vError: %v"+reset, s, err)
+		ioutil.WriteFile("/etc/ASRS_agent/.config/error.txt",[]byte(s), 0755)
 	}
+}
+
+func EventHandler(s string)  {
+	ioutil.WriteFile("/etc/ASRS_agent/.config/event.txt",[]byte(s), 0755)
+}
+
+func NotiHandler(s string)  {
+	ioutil.WriteFile("/etc/ASRS_agent/.config/noti.txt",[]byte(s), 0755)
+}
+
+func ProgHandler(s string)  {
+	ioutil.WriteFile("/etc/ASRS_agent/.config/progress.txt",[]byte(s), 0755)
 }
