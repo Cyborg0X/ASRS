@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 )
 
 
@@ -80,10 +81,11 @@ func InitializeJSON() error {
 
 		}{FullSnapshot: false, SnapshotNum: 0, Ltimestamp: ""},
 	}
-
+	fileper, _ := os.Stat(filepath)
+	per := fileper.Mode().Perm()
 	jsonData, err := json.MarshalIndent(defaultConfig, "", "  ")
 	errorhandler(err, red+"CONFIG ERROR:  Error parsing config file:"+reset)
-	err = ioutil.WriteFile("/etc/ASRS_agent/.config/config.json", jsonData, 0755)
+	err = ioutil.WriteFile("/etc/ASRS_agent/.config/config.json", jsonData, per)
 	if err != nil {
 		fmt.Printf("ERROR WRITING: %v",err)
 	}
