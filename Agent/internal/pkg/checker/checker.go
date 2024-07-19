@@ -3,7 +3,6 @@ package checker
 import (
 	//"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	//"io/ioutil"
@@ -72,7 +71,7 @@ func Depcheck() bool {
 
 		}
 
-		err = communication.AssignWorkstationIP()
+		err := communication.AssignWorkstationIP()
 		if err != nil {
 			fmt.Println(red+"Erroring assigning Workstation IP address"+reset)
 		}
