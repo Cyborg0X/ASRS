@@ -84,6 +84,9 @@ func InitializeJSON() error {
 	jsonData, err := json.MarshalIndent(defaultConfig, "", "  ")
 	errorhandler(err, red+"CONFIG ERROR:  Error parsing config file:"+reset)
 	err = ioutil.WriteFile("/etc/ASRS_agent/.config/config.json", jsonData, 0777)
+	if err != nil {
+		fmt.Printf("ERROR WRITING: %v",err)
+	}
 	return nil
 }
 
