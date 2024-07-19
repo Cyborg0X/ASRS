@@ -61,10 +61,10 @@ func Depcheck() bool {
 		fmt.Println(green+"Initilizing config file,,,,,,"+reset)
 		filepath := "/etc/ASRS_agent/.config/config.json"
 
-		_, err := ioutil.ReadFile(filepath)
+		
 		file, _ := os.Stat(filepath)
 		// If file doesn't exist, assume it's the first run and create a new one with InitializeJSON
-		if os.IsNotExist(err) || file.Size() == 0 {
+		if  file.Size() == 0 {
 			err := handler.InitializeJSON()
 			if err != nil {
 				fmt.Println(red+"Error initialize config file"+reset)
