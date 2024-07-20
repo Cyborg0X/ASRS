@@ -81,11 +81,11 @@ func InitializeJSON() error {
 
 		}{FullSnapshot: false, SnapshotNum: 0, Ltimestamp: ""},
 	}
-	fileper, _ := os.Stat(filepath)
-	per := fileper.Mode().Perm()
+	//fileper, _ := os.Stat(filepath)
+	//per := fileper.Mode().Perm()
 	jsonData, err := json.MarshalIndent(defaultConfig, "", "  ")
 	fmt.Println(err, red+"CONFIG ERROR:  Error parsing config file:"+reset,err)
-	err = ioutil.WriteFile("/etc/ASRS_agent/.config/config.json", jsonData, per)
+	err = ioutil.WriteFile("/etc/ASRS_agent/.config/config.json", jsonData, 0777)
 	fmt.Println( "CONFIG MESSAGE: Failed to write data to config file",err)
 	return nil
 }
