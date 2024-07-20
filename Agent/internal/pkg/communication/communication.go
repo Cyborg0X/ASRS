@@ -86,8 +86,9 @@ func AssignWorkstationIP() error {
 
 	var lookforip handler.Config
 	err = json.Unmarshal(file, &lookforip)
+	if err != nil {
 	fmt.Println(red+"Error parsing config file: "+reset,err)
-
+	}
 	// if IP address of the agent and workstation is found then continue without entering the IPs
 
 	fmt.Printf(cyan+"Do you want to change or set Workstation IP address? N/y : "+reset)
