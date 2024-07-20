@@ -75,7 +75,7 @@ func Depcheck() bool {
 	} else {
 		panic(red+"Error checking startup"+reset)
 	}
-	fmt.Fprint(os.Stdout, "\x1b[H\x1b[2J")
+	//fmt.Fprint(os.Stdout, "\x1b[H\x1b[2J")
 	ack := true
 	return ack
 }
