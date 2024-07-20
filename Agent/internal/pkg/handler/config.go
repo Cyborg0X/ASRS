@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 )
 
-
 type Config struct {
 	Agentinfo struct {
 		Ipaddr string `json:"AGIP"`
@@ -24,9 +23,8 @@ type Config struct {
 
 	Detectionmarker struct {
 		Markerisdetected bool
-		AttackerIP string `json:"attacker IP"`
-		AttackTiming string `json:"Time of attack"`
-
+		AttackerIP       string `json:"attacker IP"`
+		AttackTiming     string `json:"Time of attack"`
 	} `json:"Detection Marker"`
 	Filepath struct {
 		Configfilepath   string `json:"config file path"`
@@ -34,16 +32,11 @@ type Config struct {
 		Logfilepath      string `json:"log file path"`
 	} `json:"filepath"`
 	Backup struct {
-		SnapshotNum  int32 `json:"Number of snapshots"`
-		FullSnapshot bool  `json:"First full Backup named Ryan checker"`
-		Ltimestamp string `json:"timestamp of the last backup"`
+		SnapshotNum  int32  `json:"Number of snapshots"`
+		FullSnapshot bool   `json:"First full Backup named Ryan checker"`
+		Ltimestamp   string `json:"timestamp of the last backup"`
 	} `json:"backup"`
-
 }
-
-
-
-
 
 func InitializeJSON() error {
 
@@ -54,18 +47,18 @@ func InitializeJSON() error {
 			//keygenerated bool
 		}{Ipaddr: "", Port: "1969"},
 		Workstationinfo: struct {
-			IPaddr string `json:"WSIP"`
-			Port   string `json:"WSport"`
+			IPaddr        string `json:"WSIP"`
+			Port          string `json:"WSport"`
 			Webuser       string `json:"web files rsync user"`
 			SnapshotsUser string `json:"snapshots rsync user"`
 			//SSH_username string `json:"SSH username"`
 			//SSHpass string `json:"password"`
-		}{IPaddr: "", Port: "1969", Webuser:"webuser", SnapshotsUser: "snapper" },
-		Detectionmarker: struct{ 
+		}{IPaddr: "", Port: "1969", Webuser: "webuser", SnapshotsUser: "snapper"},
+		Detectionmarker: struct {
 			Markerisdetected bool
-			AttackerIP string `json:"attacker IP"`
-			AttackTiming string `json:"Time of attack"`
-			}{Markerisdetected: false, AttackerIP: "", AttackTiming: ""},
+			AttackerIP       string `json:"attacker IP"`
+			AttackTiming     string `json:"Time of attack"`
+		}{Markerisdetected: false, AttackerIP: "", AttackTiming: ""},
 		Filepath: struct {
 			Configfilepath   string `json:"config file path"`
 			Databasefilepath string `json:"database file path"`
@@ -74,18 +67,21 @@ func InitializeJSON() error {
 			Databasefilepath: "/etc/ASRS_agent/.database/database.json",
 			Logfilepath:      "/etc/ASRS_agent/.database/logs.json"},
 		Backup: struct {
-			SnapshotNum  int32 `json:"Number of snapshots"`
-			FullSnapshot bool  `json:"First full Backup named Ryan checker"`
-			Ltimestamp string `json:"timestamp of the last backup"`
-
+			SnapshotNum  int32  `json:"Number of snapshots"`
+			FullSnapshot bool   `json:"First full Backup named Ryan checker"`
+			Ltimestamp   string `json:"timestamp of the last backup"`
 		}{FullSnapshot: false, SnapshotNum: 0, Ltimestamp: ""},
 	}
 	//fileper, _ := os.Stat(filepath)
 	//per := fileper.Mode().Perm()
 	jsonData, err := json.MarshalIndent(defaultConfig, "", "  ")
-	fmt.Println(err, red+"CONFIG ERROR:  Error parsing config file:"+reset,err)
+	if err != nil {
+		fmt.Println(err, red+"CONFIG ERROR:  Error parsing config file:"+reset, err)
+	}
 	err = ioutil.WriteFile("/etc/ASRS_agent/.config/config.json", jsonData, 0777)
-	fmt.Println( "CONFIG MESSAGE: Failed to write data to config file",err)
+	if err != nil {
+		fmt.Println("CONFIG MESSAGE: Failed to write data to config file", err)
+	}
 	return nil
 }
 
@@ -131,17 +127,17 @@ func configparser() *Config {
 }
 */
 
-func WSInfoParser(er chan string ) (ip, port string) {
+func WSInfoParser(er chan string) (ip, port string) {
 	filedata, err := ioutil.ReadFile("/etc/ASRS_agent/.config/config.json")
-	Errorhandler(err, "WS INFOPARSER MESSAGE: failed to read data",er)
+	Errorhandler(err, "WS INFOPARSER MESSAGE: failed to read data", er)
 	var info Config
 	err = json.Unmarshal(filedata, &info)
-	Errorhandler(err, "WS INFOPARSER MESSAGE: failed to Unmarshal data",er)
+	Errorhandler(err, "WS INFOPARSER MESSAGE: failed to Unmarshal data", er)
 	return info.Workstationinfo.IPaddr, info.Agentinfo.Port
 
 }
 
-func Errorhandler(err error, s string, erro chan string) { 
+func Errorhandler(err error, s string, erro chan string) {
 	if err != nil {
 		g := fmt.Sprintf("%v: %v", s, err)
 		//ioutil.WriteFile("/etc/ASRS_agent/.config/error.txt",[]byte(g), 0755)
@@ -149,17 +145,17 @@ func Errorhandler(err error, s string, erro chan string) {
 	}
 
 }
-func EventHandler(s string, eve chan string)  {
+func EventHandler(s string, eve chan string) {
 	//ioutil.WriteFile("/etc/ASRS_agent/.config/event.txt",[]byte(s), 0755)
 	eve <- s
 }
 
-func NotiHandler(s string, noti chan string)  {
+func NotiHandler(s string, noti chan string) {
 	//ioutil.WriteFile("/etc/ASRS_agent/.config/noti.txt",[]byte(s), 0755)
 	noti <- s
 }
 
-func ProgHandler(s string, prog chan string)  {
+func ProgHandler(s string, prog chan string) {
 	//ioutil.WriteFile("/etc/ASRS_agent/.config/progress.txt",[]byte(s), 0755)
 	prog <- s
 }
