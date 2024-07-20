@@ -84,9 +84,9 @@ func InitializeJSON() error {
 	fileper, _ := os.Stat(filepath)
 	per := fileper.Mode().Perm()
 	jsonData, err := json.MarshalIndent(defaultConfig, "", "  ")
-	Errorhandler(err, red+"CONFIG ERROR:  Error parsing config file:"+reset)
+	fmt.Println(err, red+"CONFIG ERROR:  Error parsing config file:"+reset)
 	err = ioutil.WriteFile("/etc/ASRS_agent/.config/config.json", jsonData, per)
-	Errorhandler(err, "CONFIG MESSAGE: Failed to write data to config file")
+	fmt.Println( "CONFIG MESSAGE: Failed to write data to config file")
 	return nil
 }
 
@@ -132,31 +132,35 @@ func configparser() *Config {
 }
 */
 
-func WSInfoParser() (ip, port string) {
+func WSInfoParser(er chan string ) (ip, port string) {
 	filedata, err := ioutil.ReadFile("/etc/ASRS_agent/.config/config.json")
-	Errorhandler(err, "WS INFOPARSER MESSAGE: failed to read data")
+	Errorhandler(err, "WS INFOPARSER MESSAGE: failed to read data",er)
 	var info Config
 	err = json.Unmarshal(filedata, &info)
-	Errorhandler(err, "WS INFOPARSER MESSAGE: failed to Unmarshal data")
+	Errorhandler(err, "WS INFOPARSER MESSAGE: failed to Unmarshal data",er)
 	return info.Workstationinfo.IPaddr, info.Agentinfo.Port
 
 }
 
-func Errorhandler(err error, s string) { 
+func Errorhandler(err error, s string, erro chan string) { 
 	if err != nil {
 		g := fmt.Sprintf("%v: %v", s, err)
-		ioutil.WriteFile("/etc/ASRS_agent/.config/error.txt",[]byte(g), 0755)
+		//ioutil.WriteFile("/etc/ASRS_agent/.config/error.txt",[]byte(g), 0755)
+		erro <- g
 	}
+
+}
+func EventHandler(s string, eve chan string)  {
+	//ioutil.WriteFile("/etc/ASRS_agent/.config/event.txt",[]byte(s), 0755)
+	eve <- s
 }
 
-func EventHandler(s string)  {
-	ioutil.WriteFile("/etc/ASRS_agent/.config/event.txt",[]byte(s), 0755)
+func NotiHandler(s string, noti chan string)  {
+	//ioutil.WriteFile("/etc/ASRS_agent/.config/noti.txt",[]byte(s), 0755)
+	noti <- s
 }
 
-func NotiHandler(s string)  {
-	ioutil.WriteFile("/etc/ASRS_agent/.config/noti.txt",[]byte(s), 0755)
-}
-
-func ProgHandler(s string)  {
-	ioutil.WriteFile("/etc/ASRS_agent/.config/progress.txt",[]byte(s), 0755)
+func ProgHandler(s string, prog chan string)  {
+	//ioutil.WriteFile("/etc/ASRS_agent/.config/progress.txt",[]byte(s), 0755)
+	prog <- s
 }

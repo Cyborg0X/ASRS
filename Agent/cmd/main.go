@@ -1,12 +1,9 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
-	"os"
 	"sync"
 	"time"
 
@@ -19,11 +16,19 @@ import (
 
 var green = "\033[32m"
 var reset = "\033[0m"
+var progresschan = make(chan string)
+var eventchan = make(chan string)
+var errorchan = make(chan string)
+var notificationchan = make(chan string)
+
 
 func main() {
 	wtcom := make(chan bool)
-	go Program(wtcom)
+
+	go Program(wtcom,errorchan, eventchan,notificationchan,progresschan)
 	<-wtcom
+
+	 
 	if err := ui.Init(); err != nil {
 		log.Fatalf("failed to initialize termui: %v", err)
 	}
@@ -67,25 +72,20 @@ func main() {
 	*/
 	// Simulate adding new events, errors, and notifications
 
-	//progresscounter := 0
-	//eventCounter := 0
-	//errorCounter := 0
-	//notificationCounter := 0
-	//progresschan := make(chan string)
-	//eventchan := make(chan string)
-	//errorchan := make(chan string)
-	//notificationchan := make(chan string)
+	progresscounter := 0
+	eventCounter := 0
+	errorCounter := 0
+	notificationCounter := 0
+
 
 	go func() {
 		for {
-			// progress events from file
-			progContent, err := readFile("/etc/ASRS_agent/.config/progress.txt")
-			if err != nil {
-				log.Printf("failed to read events file: %v", err)
-			} else {
-				for _, line := range progContent {
-					progresswidgets.Rows = append(progresswidgets.Rows, line)
-				}			}
+			proge := <- progresschan
+			progresscounter++
+			progresswidgets.Rows = append(progresswidgets.Rows, proge+string(rune(progresscounter)))
+			if len(eventWidget.Rows) > 10 {
+				progresswidgets.Rows = progresswidgets.Rows[1:]
+			}
 			ui.Render(progresswidgets)
 			time.Sleep(time.Millisecond * 100)
 		}
@@ -93,15 +93,12 @@ func main() {
 
 	go func() {
 		for {
-			// Read events from file
-			eventContent, err := readFile("/etc/ASRS_agent/.config/events.txt")
-			if err != nil {
-				log.Printf("failed to read events file: %v", err)
-			} else {
-				for _, line := range eventContent {
-					eventWidget.Rows = append(eventWidget.Rows, line)
-				}			}
-
+			eve := <- eventchan
+			eventCounter++
+			eventWidget.Rows = append(eventWidget.Rows, eve+string(rune(eventCounter)))
+			if len(eventWidget.Rows) > 10 {
+				eventWidget.Rows = eventWidget.Rows[1:]
+			}
 			ui.Render(eventWidget)
 			time.Sleep(time.Millisecond * 100)
 		}
@@ -110,14 +107,11 @@ func main() {
 	go func() {
 
 		for {
-			// Read errors from file
-			errorContent, err := readFile("/etc/ASRS_agent/.config/errors.txt")
-			if err != nil {
-				log.Printf("failed to read errors file: %v", err)
-			} else {
-				for _, line := range errorContent {
-					errorWidget.Rows = append(errorWidget.Rows, line)
-				}
+			erro := <- errorchan
+			errorCounter++
+			errorWidget.Rows = append(errorWidget.Rows, erro+string(rune(errorCounter)))
+			if len(errorWidget.Rows) > 10 {
+				errorWidget.Rows = errorWidget.Rows[1:]
 			}
 			ui.Render(errorWidget)
 			time.Sleep(time.Millisecond * 100)
@@ -126,14 +120,12 @@ func main() {
 
 	go func() {
 		for {
-			// Read notifications from file
-			notificationContent, err := readFile("/etc/ASRS_agent/.config/notifications.txt")
-			if err != nil {
-				log.Printf("failed to read notifications file: %v", err)
-			} else {
-				for _, line := range notificationContent {
-					notificationWidget.Rows = append(notificationWidget.Rows, line)
-				}			}
+			noti := <-notificationchan
+			notificationCounter++
+			notificationWidget.Rows = append(notificationWidget.Rows, noti+string(rune(notificationCounter)))
+			if len(notificationWidget.Rows) > 10 {
+				notificationWidget.Rows = notificationWidget.Rows[1:]
+			}
 			ui.Render(notificationWidget)
 			time.Sleep(time.Millisecond * 100)
 		}
@@ -151,19 +143,28 @@ func main() {
 	
 }
 
-func Program(kek chan bool) {
+
+func Program(kek chan bool, er, eve, noti, prog chan string) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	checkdone := checker.Depcheck()
 	if checkdone {
 		fmt.Println(green + "Welcome agent of ASRS" + reset)
+		err := communication.AssignWorkstationIP()
+		if err != nil {
+			fmt.Println("Erroring assigning Workstation IP address")
+		}
+		err = communication.AssignAgentIP()
+		if err != nil {
+			fmt.Println("Erroring assigning Agent IP address")
+		}
 		kek <- true
 	}
-	ip, port := handler.WSInfoParser()
+	ip, port := handler.WSInfoParser(er)
 
 	procedure_chan := make(chan net.Conn, 1)
-	go communication.AG_Listener(ip, port, procedure_chan)
-	go handler.TaskHandler(&wg, procedure_chan)
+	go communication.AG_Listener(ip, port, procedure_chan, eve,er,prog)
+	go handler.TaskHandler(&wg, procedure_chan,er,eve,noti,prog)
 	wg.Wait()
 
 	// return procedure from listener passed in channel and
@@ -172,41 +173,4 @@ func Program(kek chan bool) {
 
 }
 
-func readFile(filename string) ([]string, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
 
-	var content []string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		content = append(content, scanner.Text())
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-
-	return content, nil
-}
-
-func Errorhandler(err error, s string) { 
-	if err != nil {
-		g := fmt.Sprintf("%v: %v", s, err)
-		ioutil.WriteFile("error.txt",[]byte(g), 0755)
-	}
-}
-
-func EventHandler(s string)  {
-	ioutil.WriteFile("event.txt",[]byte(s), 0755)
-}
-
-func NotiHandler(s string)  {
-	ioutil.WriteFile("noti.txt",[]byte(s), 0755)
-}
-
-func ProgHandler(s string)  {
-	ioutil.WriteFile("progress.txt",[]byte(s), 0755)
-}

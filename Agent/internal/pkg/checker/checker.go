@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	//"github.com/Cyborg0X/ASRS/Agent/internal/pkg/communication"
-	"github.com/Cyborg0X/ASRS/Agent/internal/pkg/communication"
 	"github.com/Cyborg0X/ASRS/Agent/internal/pkg/handler"
 )
 
@@ -68,14 +67,6 @@ func Depcheck() bool {
 			if err != nil {
 				fmt.Println(red+"Error initialize config file"+reset)
 			}
-		}
-		err := communication.AssignWorkstationIP()
-		if err != nil {
-			handler.Errorhandler(err, "Erroring assigning Workstation IP address")
-		}
-		err = communication.AssignAgentIP()
-		if err != nil {
-			handler.Errorhandler(err,"Erroring assigning Agent IP address")
 		}
 		var detector handler.Config
 		fmt.Println(green+"marker : "+reset, detector.Detectionmarker)
