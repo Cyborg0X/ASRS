@@ -150,6 +150,7 @@ func Program(kek chan bool, er, eve, noti, prog chan string) {
 	checkdone := checker.Depcheck()
 	if checkdone {
 		fmt.Println(green + "Welcome agent of ASRS" + reset)
+		kek<-true
 	}
 	ip, port := handler.WSInfoParser(er)
 
