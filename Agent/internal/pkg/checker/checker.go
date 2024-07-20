@@ -65,7 +65,7 @@ func Depcheck() bool {
 		if  file.Size() == 0 || file.Size() == 1 {
 			err := handler.InitializeJSON()
 			if err != nil {
-				fmt.Println(red+"Error initialize config file"+reset)
+				fmt.Println(red+"Error initialize config file"+reset,err)
 			}
 		}
 		var detector handler.Config

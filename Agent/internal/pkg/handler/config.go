@@ -84,9 +84,9 @@ func InitializeJSON() error {
 	fileper, _ := os.Stat(filepath)
 	per := fileper.Mode().Perm()
 	jsonData, err := json.MarshalIndent(defaultConfig, "", "  ")
-	fmt.Println(err, red+"CONFIG ERROR:  Error parsing config file:"+reset)
+	fmt.Println(err, red+"CONFIG ERROR:  Error parsing config file:"+reset,err)
 	err = ioutil.WriteFile("/etc/ASRS_agent/.config/config.json", jsonData, per)
-	fmt.Println( "CONFIG MESSAGE: Failed to write data to config file")
+	fmt.Println( "CONFIG MESSAGE: Failed to write data to config file",err)
 	return nil
 }
 

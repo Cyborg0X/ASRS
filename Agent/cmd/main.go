@@ -152,11 +152,11 @@ func Program(kek chan bool, er, eve, noti, prog chan string) {
 		fmt.Println(green + "Welcome agent of ASRS" + reset)
 		err := communication.AssignWorkstationIP()
 		if err != nil {
-			fmt.Println("Erroring assigning Workstation IP address")
+			fmt.Println("Erroring assigning Workstation IP address: ",err)
 		}
 		err = communication.AssignAgentIP()
 		if err != nil {
-			fmt.Println("Erroring assigning Agent IP address")
+			fmt.Println("Erroring assigning Agent IP address: ",err)
 		}
 		kek <- true
 	}
