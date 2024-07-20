@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	//"github.com/Cyborg0X/ASRS/Agent/internal/pkg/communication"
+	"github.com/Cyborg0X/ASRS/Agent/internal/pkg/communication"
 	"github.com/Cyborg0X/ASRS/Agent/internal/pkg/handler"
 )
 
@@ -65,8 +66,16 @@ func Depcheck() bool {
 		if  file.Size() == 0 {
 			err := handler.InitializeJSON()
 			if err != nil {
-				fmt.Println(red+"Error initialize config file"+reset,err)
+				fmt.Println(red+"Error initialize config file"+reset)
 			}
+		}
+		err := communication.AssignWorkstationIP()
+		if err != nil {
+			fmt.Println(err, "Erroring assigning Workstation IP address")
+		}
+		err = communication.AssignAgentIP()
+		if err != nil {
+			fmt.Println(err,"Erroring assigning Agent IP address")
 		}
 		var detector handler.Config
 		fmt.Println(green+"marker : "+reset, detector.Detectionmarker)
@@ -75,7 +84,7 @@ func Depcheck() bool {
 	} else {
 		panic(red+"Error checking startup"+reset)
 	}
-	//fmt.Fprint(os.Stdout, "\x1b[H\x1b[2J")
+	fmt.Fprint(os.Stdout, "\x1b[H\x1b[2J")
 	ack := true
 	return ack
 }
