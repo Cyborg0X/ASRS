@@ -79,14 +79,14 @@ func AssignWorkstationIP() error {
 
 	file, err := ioutil.ReadFile(filepath)
 	if err != nil {
-		fmt.Println(err,"error reading config file")
+		fmt.Println("error reading config file",err)
 		//return //fmt.Errorf(red+"error reading config file: %v"+reset, err) // Wrap error with context for other errors
 	}
 	//errorhandler(err, "Error reading config file: ")
 
 	var lookforip handler.Config
 	err = json.Unmarshal(file, &lookforip)
-	fmt.Println(err, red+"Error parsing config file: "+reset)
+	fmt.Println(red+"Error parsing config file: "+reset,err)
 
 	// if IP address of the agent and workstation is found then continue without entering the IPs
 
