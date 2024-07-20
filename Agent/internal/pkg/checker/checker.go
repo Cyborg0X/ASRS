@@ -62,7 +62,7 @@ func Depcheck() bool {
 		
 		file, _ := os.Stat(filepath)
 		// If file doesn't exist, assume it's the first run and create a new one with InitializeJSON
-		if  file.Size() == 0 {
+		if  file.Size() == 0 || file.Size() == 1 {
 			err := handler.InitializeJSON()
 			if err != nil {
 				fmt.Println(red+"Error initialize config file"+reset)
