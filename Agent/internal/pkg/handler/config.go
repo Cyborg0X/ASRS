@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"time"
 )
 
 type Config struct {
@@ -53,7 +54,7 @@ func InitializeJSON() error {
 			SnapshotsUser string `json:"snapshots rsync user"`
 			//SSH_username string `json:"SSH username"`
 			//SSHpass string `json:"password"`
-		}{IPaddr: "", Port: "1969", Webuser: "webuser", SnapshotsUser: "snapper"},
+		}{IPaddr: "", Port: "1969", Webuser: "webuser", SnapshotsUser: "asrs"},
 		Detectionmarker: struct {
 			Markerisdetected bool
 			AttackerIP       string `json:"attacker IP"`
@@ -141,21 +142,25 @@ func Errorhandler(err error, s string, erro chan string) {
 	if err != nil {
 		g := fmt.Sprintf("%v: %v", s, err)
 		//ioutil.WriteFile("/etc/ASRS_agent/.config/error.txt",[]byte(g), 0755)
+		time.Sleep(time.Second *1)
 		erro <- g
 	}
 
 }
 func EventHandler(s string, eve chan string) {
 	//ioutil.WriteFile("/etc/ASRS_agent/.config/event.txt",[]byte(s), 0755)
+	time.Sleep(time.Second *1)
 	eve <- s
 }
 
 func NotiHandler(s string, noti chan string) {
 	//ioutil.WriteFile("/etc/ASRS_agent/.config/noti.txt",[]byte(s), 0755)
+	time.Sleep(time.Second *1)
 	noti <- s
 }
 
 func ProgHandler(s string, prog chan string) {
 	//ioutil.WriteFile("/etc/ASRS_agent/.config/progress.txt",[]byte(s), 0755)
+	time.Sleep(time.Second *1)
 	prog <- s
 }

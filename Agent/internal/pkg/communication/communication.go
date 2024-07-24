@@ -130,7 +130,7 @@ func AssignAgentIP() error {
 		return fmt.Errorf(red+"Error reading config file: %w"+reset, err) // Wrap error with context for other errors
 		//fmt.Println(err, red+"Error reading config file: "+reset)
 	}
-
+	
 	var lookforip handler.Config
 	err = json.Unmarshal(file, &lookforip)
 	if err != nil {

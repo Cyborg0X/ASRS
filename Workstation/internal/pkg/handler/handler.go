@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"os"
 	"sync"
 	"time"
 
@@ -13,9 +14,7 @@ import (
 	"github.com/Cyborg0X/ASRS/Workstation/internal/pkg/config"
 )
 
-var red = "\033[31m"
-var green = "\033[32m"
-var reset = "\033[0m"
+
 
 type DataType int
 
@@ -46,39 +45,55 @@ type DataWrapper struct {
 	Data interface{} `json:"data"`
 }
 
-func TaskHandler(wgd *sync.WaitGroup) {
-	fmt.Println(green + "TASK HANDLER RUNNING NOW" + reset)
+func TaskHandler(wgd *sync.WaitGroup, noti,er, eve, prog chan string) {
+	ProgHandler("TASK HANDLER RUNNING NOW", prog)
 	defer wgd.Done()
 	var wg sync.WaitGroup
 	wg.Add(1)
 	get_done := make(chan bool)
 	defer close(get_done)
-	go Get_Status(&wg, get_done)
+	go Get_Status(&wg, get_done, er, eve, prog)
 
-	//go checkIDS()
+	go checkIDS(er, eve, prog)
 
 	wg.Wait()
 
 }
 
-func checkIDS() {
+func checkIDS(er, eve, prog chan string) {
+	ProgHandler("COMMAND INJECTION CHECKER STARTED", prog)
+	filePath := "path/to/file.txt"
+	slp := make(chan bool, 1)
+	for {
+		fileInfo, err := os.Stat(filePath)
+		if err != nil {
+			Errorhandler(err,"failed to get file info", er)
+		}
+
+		fileSize := fileInfo.Size()
+		if fileSize > 0 {
+			procedureSelector("A2", slp,prog, er)
+			g := fmt.Sprintf("File size increased: %d bytes\nSelf-Healing procedure sent", fileSize)
+			EventHandler(g, eve)
+			if !<-slp {
+				continue
+			}
+			time.Sleep(time.Minute * 1)
+
+		}
+
+		time.Sleep(5 * time.Second)
+	}
 	// if log file detected a attack then procedureSelector
 	// check IDS 
 	//.......
 
 	// SEND procedure if detected an attack
-	slp := make(chan bool, 1)
-	for {
-		procedureSelector("A2", slp)
-		if !<-slp {
-			break
-		}
-		time.Sleep(time.Minute * 1)
-	}
 
 }
 
-func Get_Status(wg *sync.WaitGroup, getdone <-chan bool) {
+func Get_Status(wg *sync.WaitGroup, getdone <-chan bool,er, eve, prog chan string) {
+	ProgHandler("Get Status started", prog)
 	defer wg.Done()
 	for {
 		time.Sleep(time.Second * 20)
@@ -87,12 +102,12 @@ func Get_Status(wg *sync.WaitGroup, getdone <-chan bool) {
 			return
 		default:
 			sleep := make(chan bool, 1)
-			go procedureSelector("A1", sleep); if <-sleep {time.Sleep(time.Minute * 3)}
+			go procedureSelector("A1", sleep,prog, er); if <-sleep {time.Sleep(time.Minute * 3)}
 		}
 	}
 }
 
-func procedureSelector(procedurename string, slp chan bool) {
+func procedureSelector(procedurename string, slp chan bool, prog, er chan string) {
 	// pass struct here and get the procedure function name like A1, A2
 	
 	switch procedurename {
@@ -107,12 +122,12 @@ func procedureSelector(procedurename string, slp chan bool) {
 
 		jsondata, err := json.MarshalIndent(wrapper, "", "  ")
 		if err != nil {
-			fmt.Println(red+"\nJSON MESSAGE: Failed to marshal A1:"+reset, err)
+			Errorhandler(err, "JSON MESSAGE: Failed to marshal A1:", er)
 			break
 		}
-		receivedmessage, err := ProcedureSender(jsondata, procedurename)
+		receivedmessage, err := ProcedureSender(jsondata, procedurename,er,prog)
 		if err != nil {
-			fmt.Println(red+"\nCOMMUNICATION MESSAGE: Failed to send A1 to Agent:"+reset, err)
+			Errorhandler(err,"COMMUNICATION MESSAGE: Failed to send A1 to Agent:", er)
 			return
 		}
 		if string(receivedmessage) == "B3PROC" {
@@ -130,11 +145,11 @@ func procedureSelector(procedurename string, slp chan bool) {
 		filepath := "/etc/ASRS_WS/.config/config.json"
 		file, err := ioutil.ReadFile(filepath)
 		if err != nil {
-			fmt.Println(red+"\nSelector MESSAGE: Error reading config file: %w"+reset, err) // Wrap error with context for other errors
+			Errorhandler(err,"Selector MESSAGE: Error reading config file", er) // Wrap error with context for other errors
 		}
 		err = json.Unmarshal(file, &config)
 		if err != nil {
-			fmt.Println(red+"\nSelector MESSAGE: Error Unmarshal config file: %w"+reset, err) // Wrap error with context for other errors
+			Errorhandler(err,"Selector MESSAGE: Error Unmarshal config file", er) // Wrap error with context for other errors
 		}
 		IP := config.Detectionmarker.AttackerIP
 		time := config.Detectionmarker.AttackTiming
@@ -151,12 +166,12 @@ func procedureSelector(procedurename string, slp chan bool) {
 		}
 		Jsondata, err := json.MarshalIndent(wrapper, "", "  ")
 		if err != nil {
-			fmt.Println(red+"\nJSON MESSAGE: Failed to Marshal A2:"+reset, err)
+			Errorhandler(err,"JSON MESSAGE: Failed to Marshal A2:", er)
 			return
 		}
-		receivedmessage, err := ProcedureSender(Jsondata, procedurename)
+		receivedmessage, err := ProcedureSender(Jsondata, procedurename,er,prog)
 		if err != nil {
-			fmt.Println(red+"\nCOMMUNICATION MESSAGE: Failed to send A2 to Agent:"+reset, err)
+			Errorhandler(err,"COMMUNICATION MESSAGE: Failed to send A2 to Agent:", er)
 			return
 		}
 		if string(receivedmessage) == "B3PROC" {
@@ -194,7 +209,7 @@ func SaveKeys(received []byte) {
 }
 */
 
-func ProcedureSender(procedure []byte, procedurename string) (data []byte, err error) {
+func ProcedureSender(procedure []byte, procedurename string,er, prog chan string) (data []byte, err error) {
 
 	ip, port := config.AgentInfoParser()
 
@@ -207,16 +222,18 @@ func ProcedureSender(procedure []byte, procedurename string) (data []byte, err e
 
 	_, err = conn.Write(procedure)
 	if err == nil {
-		fmt.Printf(green+"\nCOMMUNICATION MESSAGE: Procedure %v sent successfully"+reset, procedurename)
+		g := fmt.Sprintf("\nCOMMUNICATION MESSAGE: Procedure %v sent successfully", procedurename)
+		ProgHandler(g,prog)
 		// response, err := ProcedureReceiver(conn, procedure)
 		received, err := ProcedureReceiver(conn)
 		if err != nil {
-			fmt.Printf(red+"\nCOMMUNICATION MESSAGE: can't receive after the %v\n%v"+reset, procedurename, err)
-
+			g := fmt.Sprintf("\nCOMMUNICATION MESSAGE: can't receive after the %v\n%v", procedurename, err)
+			Errorhandler(err, g,er)
 		}
 		return received, nil
 	}
-	fmt.Println(red+"\nCOMMUNICATION MESSAGE: Failed to send data to agent:"+reset, err)
+	
+	Errorhandler(err,"\nCOMMUNICATION MESSAGE: Failed to send data to agent:", er)
 	return
 }
 
@@ -295,7 +312,7 @@ func ProcedureReceiver(conn net.Conn) (Response []byte, err error) {
 	for {
 		n, err := conn.Read(buffer)
 		if err != nil {
-			fmt.Println(red+"\nCOMMUNICATION MESSAGE: Failed to read from connection:"+reset, err)
+			fmt.Println("\nCOMMUNICATION MESSAGE: Failed to read from connection:", err)
 		}
 		receveddata.Write(buffer[:n])
 		if n < len(buffer) {
@@ -327,13 +344,29 @@ func ProcedureReceiver(conn net.Conn) (Response []byte, err error) {
 
 }
 
-func A1ResponseHandler(response string) {
+func Errorhandler(err error, s string, erro chan string) {
+	if err != nil {
+		g := fmt.Sprintf("%v: %v", s, err)
+		//ioutil.WriteFile("/etc/ASRS_agent/.config/error.txt",[]byte(g), 0755)
+		time.Sleep(time.Second *1)
+		erro <- g
+	}
 
 }
-func A2ResponseHandler(response string) {
-
+func EventHandler(s string, eve chan string) {
+	//ioutil.WriteFile("/etc/ASRS_agent/.config/event.txt",[]byte(s), 0755)
+	time.Sleep(time.Second *1)
+	eve <- s
 }
 
-func B3ResquestHandler(reqeust string) {
+func NotiHandler(s string, noti chan string) {
+	//ioutil.WriteFile("/etc/ASRS_agent/.config/noti.txt",[]byte(s), 0755)
+	time.Sleep(time.Second *1)
+	noti <- s
+}
 
+func ProgHandler(s string, prog chan string) {
+	//ioutil.WriteFile("/etc/ASRS_agent/.config/progress.txt",[]byte(s), 0755)
+	time.Sleep(time.Second *1)
+	prog <- s
 }
