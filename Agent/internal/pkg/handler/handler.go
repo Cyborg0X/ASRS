@@ -213,7 +213,7 @@ func CreateSnapshot(vx chan bool, stopshot chan bool, er, eve, prog chan string)
 	remote := fmt.Sprintf("%v@%v::%v", checker.Workstationinfo.SnapshotsUser, checker.Workstationinfo.IPaddr, module)
 
 	if !checker.Backup.FullSnapshot {
-		EventHandler("RSYNC Started taking full backup for your system files, this process may take time please wait.....", eve)
+		EventHandler("RSYNC Started taking full backup for your system files, this process may take time please wait, completation to be anncounced.....", eve)
 		config := exec.Command("sudo", "rsync", "-aAXv", "--password-file=/etc/ASRS_agent/.config/pass.txt", mountpoint, `"--exclude={"/etc/ASRS_agent/*", "/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"}"`, remote)
 		_, err := config.CombinedOutput()
 		if err != nil {
@@ -234,7 +234,7 @@ func CreateSnapshot(vx chan bool, stopshot chan bool, er, eve, prog chan string)
 		fileper, _ := os.Stat(filepath)
 		per := fileper.Mode().Perm()
 		ioutil.WriteFile(filepath, done, per)
-		ProgHandler("RSYNC MESSAGE: Backup completed .....", er)
+		ProgHandler("RSYNC MESSAGE: BACKUP COMPLETED .....", er)
 
 	}
 
