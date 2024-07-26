@@ -21,7 +21,19 @@ var progress = []string{"Agent Listner STARTED",
 						"COMMUNICATION MESSAGE: Connection from workstation Accepted",
 						}
 
-var noti = []string{""}
+var noti = []string{"A2 PROCEDURE RECEIVED",
+					"CHECKING FOR ATTACKER IP ADDRESS",
+					"ATTACKER IP ADDRESS FOUND",
+					"STARTING CHECKING FOR BREACHED FILES",
+					"CURRENT SYSTEM AND THE BACKUP ARE NOT THE SAME",
+					"STARTING SELF-HEALING PROCESS",
+					"RESTORING THE SYSTEM TO PRE-ATTACK STATE",
+					"ALL CHANGES HAVE BEEN REVENTED",
+					}
+
+
+
+
 var events = []string{"RSYNC MESSAGE: Sending status to workstation","ASRS initiating syncing process...", 
 					"RSYNC MESSAGE: syncing home files and web files to workstation\nit might take a long time.......", 
 					"RSYNC MESSAGE: SYSTEM AND WEB FILES SYNCED",
