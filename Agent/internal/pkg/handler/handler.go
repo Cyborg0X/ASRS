@@ -247,42 +247,42 @@ func CreateSnapshot(vx chan bool, stopshot chan bool, er, eve, prog chan string)
 			}
 		default:
 			ProgHandler("RSYNC Started taking backup...", prog)
-		}
-		checker.Detectionmarker.Markerisdetected = true
-		Updated_Marker, err := json.MarshalIndent(checker, "", "  ")
-		if err != nil {
+
+			checker.Detectionmarker.Markerisdetected = true
+			Updated_Marker, err := json.MarshalIndent(checker, "", "  ")
+			if err != nil {
+				now := time.Now()
+				Errorhandler(err, fmt.Sprintf("RSYNC MESSAGE: Failed to write detection marker to `true`\n detection marker is false in the backup the has been taken in this time %v\n", now.Format("2006-01-02 15:04:05")), er)
+				vx <- true
+				return
+			}
+			fileper, _ := os.Stat(filepath)
+			per := fileper.Mode().Perm()
+			err = ioutil.WriteFile(filepath, Updated_Marker, per)
+			counter++
+			time.Sleep(time.Second * 1)
+
+			create := exec.Command("sudo", "rsync", "--delete", "-aAXv", "--password-file=/etc/ASRS_agent/.config/pass.txt", mountpoint, `"--exclude={"/etc/ASRS_agent/*", "/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"}"`, remote)
+			output, err := create.CombinedOutput()
+			if err != nil {
+				Errorhandler(err, fmt.Sprintf(red+"RSYNC Error creating backup number: %v\n ERROR: %v \n output: %v\n"+reset, counter, err, string(output)), er)
+
+				vx <- true
+				return
+			}
 			now := time.Now()
-			Errorhandler(err, fmt.Sprintf("RSYNC MESSAGE: Failed to write detection marker to `true`\n detection marker is false in the backup the has been taken in this time %v\n", now.Format("2006-01-02 15:04:05")), er)
-			vx <- true
-			return
+			checker.Backup.Ltimestamp = now.Format("2006-01-02 15:04:05")
+			checker.Detectionmarker.Markerisdetected = false
+			done, err := json.MarshalIndent(checker, "", "  ")
+			if err != nil {
+				Errorhandler(err, "SNAPPER MESSAGE: Failed to write detection marker to false", er)
+				vx <- true
+				return
+			}
+
+			ioutil.WriteFile(filepath, done, per)
+			ProgHandler("RSYNC MESSAGE: SYSTEM FILES SYNCED", prog)
 		}
-		fileper, _ := os.Stat(filepath)
-		per := fileper.Mode().Perm()
-		err = ioutil.WriteFile(filepath, Updated_Marker, per)
-		counter++
-		time.Sleep(time.Second * 1)
-
-		create := exec.Command("sudo", "rsync", "--delete", "-aAXv", "--password-file=/etc/ASRS_agent/.config/pass.txt", mountpoint, `"--exclude={"/etc/ASRS_agent/*", "/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"}"`, remote)
-		output, err := create.CombinedOutput()
-		if err != nil {
-			Errorhandler(err, fmt.Sprintf(red+"RSYNC Error creating backup number: %v\n ERROR: %v \n output: %v\n"+reset, counter, err, string(output)), er)
-
-			vx <- true
-			return
-		}
-		now := time.Now()
-		checker.Backup.Ltimestamp = now.Format("2006-01-02 15:04:05")
-		checker.Detectionmarker.Markerisdetected = false
-		done, err := json.MarshalIndent(checker, "", "  ")
-		if err != nil {
-			Errorhandler(err, "SNAPPER MESSAGE: Failed to write detection marker to false", er)
-			vx <- true
-			return
-		}
-
-		ioutil.WriteFile(filepath, done, per)
-		ProgHandler("RSYNC MESSAGE: SYSTEM FILES SYNCED", prog)
-
 		//remotepath := "/etc/ASRS_WS/.database/snapshots_backup/"
 		//fmt.Println(remote)
 		//fmt.Println(string(output)) // log it later ALSO set JSON OUTPUT FORMAT IN SNAPPER
