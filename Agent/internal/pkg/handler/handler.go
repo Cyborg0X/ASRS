@@ -275,7 +275,7 @@ func CreateSnapshot(vx chan bool, stopshot chan bool, er, eve, prog chan string)
 			checker.Detectionmarker.Markerisdetected = false
 			done, err := json.MarshalIndent(checker, "", "  ")
 			if err != nil {
-				Errorhandler(err, "SNAPPER MESSAGE: Failed to write detection marker to false", er)
+				Errorhandler(err, "RSYNC MESSAGE: Failed to write detection marker to false", er)
 				vx <- true
 				return
 			}
