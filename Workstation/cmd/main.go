@@ -19,7 +19,15 @@ var progress = []string{"TASK HANDLER RUNNING",
 	"LOGGING STATUS",
 }
 
-var noti = []string{""}
+var noti = []string{"COMMAND INJECTION ATTACK HAVE BEEN DETECTED",
+					"SENDING A2 PROCEDURE TO THE AGENT",
+					"SELF-HEALING PROCESS INITIATING",
+					"WAITING FOR THE AGENT TO RESPOND",
+					"AGENT ACKNOWLEGED THE ATTACK"}
+
+
+
+
 var events = []string{
 	"COMMUNICATION MESSAGE: Connectiong to Agent",
 	"COMMUNICATION MESSAGE: Sending A1 procedure to the agent",
