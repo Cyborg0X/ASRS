@@ -154,10 +154,11 @@ func main() {
 
 
 func Program(kek chan bool, er, eve, noti, prog chan string) {
+	
 	var wg sync.WaitGroup
-
+	wg.Add(1)
 	checkdone := checker.Depcheck()
-	if checkdone == true {
+	if checkdone {
 		fmt.Println(green+"Welcome to the Workstation of ASRS"+reset)
 		kek <- true
 	}
@@ -166,8 +167,8 @@ func Program(kek chan bool, er, eve, noti, prog chan string) {
 	//if err != nil {
 	//	fmt.Println("connection lost...")
 	///	}
-	wg.Add(1)
-	handler.TaskHandler(&wg, noti,er, eve, prog)
+	
+	go handler.TaskHandler(&wg, noti,er, eve, prog)
 	wg.Wait()
 
 }
