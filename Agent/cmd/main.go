@@ -168,7 +168,11 @@ func main() {
 
 
 
-
+/*
+[**] [1:1000023:0] Command Injection detected - /vulnerabilities/exec [**]
+[Classification: Attempted User Privilege Gain] [Priority: 1]
+07/26/2024-10:30:15.123456 TCP 192.168.1.100:56789 -> 203.0.113.1:80
+*/
 
 
 
