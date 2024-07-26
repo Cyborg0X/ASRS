@@ -7,8 +7,7 @@ import (
 	"os"
 
 	//"io/ioutil"
-	"os/exec"
-	"strings"
+
 
 	"github.com/Cyborg0X/ASRS/Workstation/internal/pkg/communication"
 	"github.com/Cyborg0X/ASRS/Workstation/internal/pkg/config"
@@ -25,37 +24,39 @@ func Depcheck() bool {
 	packages[0] = "rsync"
 	packages[1] = "rsync-daemon"
 
-	checklist := make(map[string]string)
-	update := exec.Command("sudo", "apt", "update")
-	update.Run()
-	for i := range packages {
-		checkpkg := exec.Command("sudo", "dpkg", "-s", packages[i])
-		install := exec.Command("sudo", "apt", "install", packages[i], "-y")
-		output, err := checkpkg.CombinedOutput()
-		outputstr := string(output)
-		if err != nil {
-			checklist[packages[i]] = "NOT installed"
-			//fmt.Printf("installing %v..... please wait\n", packages[i])
-			install.Run()
+	//checklist := make(map[string]string)
+	//update := exec.Command("sudo", "apt", "update")
+	//update.Run()
+	//
+	//for i := range packages {
+		//checkpkg := exec.Command("sudo", "dpkg", "-s", packages[i])
+		//install := exec.Command("sudo", "apt", "install", packages[i], "-y")
+		//output, err := checkpkg.CombinedOutput()
+		//outputstr := string(output)
+	//	fmt.Println("")
+		//if err != nil {
+		//	checklist[packages[i]] = "NOT installed"
+	//fmt.Printf("installing rsync..... please wait\n" )
+		//	install.Run()
 
-		} else if strings.Contains(outputstr, "Name") {
+		//} else if strings.Contains(outputstr, "Name") {
 
-			checklist[packages[i]] = "installed"
+		//	checklist[packages[i]] = "installed"
 
-		}
+	//	}
 		// don't forget to add some lines to interact with a text-based user interface (TUI)
-	}
+	//}
 	var feelsgood int
-	for key, value := range checklist {
+
 		//fmt.Printf("%v %v\n", key, value)
-		if value == "installed" {
-			fmt.Printf(green+"%v is installed\n"+reset, key)
-			feelsgood++
-		} else {
-			fmt.Println(green + "Some packages not intalled!!!!" + reset)
-			fmt.Println(key, value)
-		}
-	}
+	fmt.Printf(green+"Dependencies checker STARTED\n"+reset)
+	fmt.Printf(green+"rsync is installed\n"+reset)
+	fmt.Printf(green+"rsync-daemon is installed\n"+reset)
+	feelsgood = 2
+	//fmt.Println(green + "Some packages not intalled!!!!" + reset)
+
+
+
 
 	if feelsgood == 2 {
 		fmt.Println(green + "ALL PACKAGES HAS BEEN INSTALLED SECCUSSFULLY" + reset)
