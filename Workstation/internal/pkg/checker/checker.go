@@ -26,7 +26,7 @@ func Depcheck() bool {
 	packages[1] = "rsync-daemon"
 
 	checklist := make(map[string]string)
-	update := exec.Command("sudo", "dnf", "update")
+	update := exec.Command("sudo", "apt", "update")
 	update.Run()
 	for i := range packages {
 		checkpkg := exec.Command("sudo", "dpkg", "-s", packages[i])
@@ -82,15 +82,11 @@ func Depcheck() bool {
 			fmt.Println(red+"Erroring assigning Agent IP address"+reset, err)
 		}
 
-	} // else {
-	//panic("Error checking startup")
-	//	}
+	} else {
+	panic("Error checking startup")
+	}
 	fmt.Fprint(os.Stdout, "\x1b[H\x1b[2J")
 	ack := true
 	return ack
 }
 
-// ssh connection and workstation
-func configSSH() {
-
-}

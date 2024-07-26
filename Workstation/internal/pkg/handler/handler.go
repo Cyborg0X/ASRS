@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"os/exec"
 	"sync"
 	"time"
 
@@ -54,7 +55,7 @@ func TaskHandler(wgd *sync.WaitGroup, noti,er, eve, prog chan string) {
 	defer close(get_done)
 	go Get_Status(&wg, get_done, er, eve, prog)
 
-	go checkIDS(er, eve, prog)
+	//go checkIDS(er, eve, prog)
 
 	wg.Wait()
 
@@ -62,9 +63,10 @@ func TaskHandler(wgd *sync.WaitGroup, noti,er, eve, prog chan string) {
 
 func checkIDS(er, eve, prog chan string) {
 	ProgHandler("COMMAND INJECTION CHECKER STARTED", prog)
-	filePath := "path/to/file.txt"
+	filePath := "/etc/ASRS_WS/.config/ci.log"
 	slp := make(chan bool, 1)
 	for {
+		_, _ = exec.Command("sudo", "grep", "-in", "Command Injection detected", "").Output()
 		fileInfo, err := os.Stat(filePath)
 		if err != nil {
 			Errorhandler(err,"failed to get file info", er)
